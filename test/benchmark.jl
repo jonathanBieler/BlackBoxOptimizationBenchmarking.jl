@@ -46,16 +46,15 @@ function run_optimizer(optimizer, run_lengths, Ntrials, f::BBOBFunctions.BBOBFun
     mean(reached_minium,1), mean(distance_to_xopt,1)
 end
 
-
 ##
 
 D = 2
 Ntrials = 20
 Δf = 1e-6
 
-run_lengths = round(Int,linspace(2,3000,20))
+run_lengths = round(Int,linspace(2,5000,20))
 
-f = BBOBFunctions.F1
+f = BBOBFunctions.F4
 
 optimizers = [
     NelderMead(), GradientDescent(), BFGS(), 

@@ -1,9 +1,10 @@
 module BBOBFunctions
 
-    using Distributions
+    using Distributions, Memoize
 
     import Base: enumerate, show
     export show
+    
 
 ## Constants and Functions
 
@@ -18,16 +19,19 @@ module BBOBFunctions
         end
         z
     end
+    
+    function T_osz(xi::Float64)
+        xhat = xi != 0 ? log(abs(xi)) : 0.
+        c1 = xi > 0 ? 10. : 5.5
+        c2 = xi > 0 ? 7.9 : 3.1
+
+        sign(xi) * exp(xhat + 0.049*(sin(c1*xhat)+sin(c2*xhat) ))
+    end
 
     function T_osz(x::Array{Float64,1})
         z = similar(x)
         for i=1:length(x)
-            xi = x[i]
-            xhat = xi != 0 ? log(abs(xi)) : 0.
-            c1 = xi > 0 ? 10. : 5.5
-            c2 = xi > 0 ? 7.9 : 3.1
-        
-            z[i] = sign(xi) * exp(xhat + 0.049*(sin(c1*xhat)+sin(c2*xhat) ))
+            z[i] = T_osz(x[i])
         end
         z
     end
@@ -47,7 +51,21 @@ module BBOBFunctions
         end
         m
     end
-
+    
+    f_pen(x) =  sum(max(0,abs(xi)-5)^2 for xi in x)
+    
+    const one_pm = sign(randn(maximum_dimension))
+    
+    #rotation matrices (probably a bit wrong)
+    @memoize function Q(D)
+        r = randn(D); r = r/norm(r)
+        Q = [r nullspace(r')]
+    end
+    @memoize function R(D)
+        r = randn(D); r = r/norm(r)
+        R = [r nullspace(r')]
+    end
+    
     ∑(x) = sum(x)
 
 ## BBOBFunction
@@ -132,6 +150,63 @@ module BBOBFunctions
     end
 
     @BBOBFunction("Rastrigin",3)
+    
+    ## f4, Buche-Rastrigin Function
+    
+    @define_x_and_f_opt(4)
+
+    """ Buche-Rastrigin Function """
+    function f4(x) 
+        D = length(x)
+        z = T_osz(x-x4_opt[1:D])
+        s = [isodd(i) ? 10*10^(0.5*(i-1)/(D-1)) : 10^(0.5*(i-1)/(D-1)) for i=1:D] 
+
+        for i=1:D 
+            @inbounds z[i] = s[i]*z[i] 
+        end
+
+        10*(D - ∑( cos(2*π*z[i]) for i=1:D )) + norm(z)^2 + 100*f_pen(x) + f4_opt
+    end
+
+    @BBOBFunction("Buche-Rastrigin",4)
+    
+    ## f5, Linear Slope
+    
+    const x5_opt = 5*one_pm
+    const f5_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)),2)))
+
+    """ Linear Slope """
+    function f5(x) 
+        D = length(x)
+        z = [ x5_opt[i]*x[i] < 25 ? x[i] : x5_opt[i] for i=1:D ]
+        s = [sign(x5_opt[i])*10^((i-1)/(D-1))  for i=1:D] 
+
+        
+        ∑( 5*abs(s[i]) -s[i]*z[i] for i=1:D ) + f5_opt
+    end
+
+    @BBOBFunction("Linear Slope",5)
+    
+    ## f6, Attractive Sector Function
+    
+    @define_x_and_f_opt(6)
+
+    """ Attractive Sector Function """
+    function f6(x) 
+        D = length(x)
+        
+        z = Q(D)*Λ(10,D)*R(D)*(x - x6_opt[1:D])
+        
+        @inbounds for i=1:D 
+            z[i] = x6_opt[i]*z[i] > 0 ? 100*z[i] : z[i]
+        end
+        
+        T_osz( ∑( z[i]^2 for i=1:D ))^0.9 + f6_opt
+    end
+
+    @BBOBFunction("Attractive Sector",6)
+
+    
 
 ## Tests
 
