@@ -7,3 +7,8 @@
 [![codecov.io](http://codecov.io/github/jonathanBieler/BBOBFunctions.jl.jl/coverage.svg?branch=master)](http://codecov.io/github/jonathanBieler/BBOBFunctions.jl.jl?branch=master)
 
 
+A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.gforge.inria.fr) (BBOB) functions.
+
+Reference:
+
+http://coco.lri.fr/downloads/download15.01/bbobdocfunctions.pdf
