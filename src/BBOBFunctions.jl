@@ -52,6 +52,8 @@ module BBOBFunctions
         m
     end
     
+    C(i,D,n) = 10^(2*(i-1)/(D-1))#conditioning
+    
     f_pen(x) =  sum(max(0,abs(xi)-5)^2 for xi in x)
     
     const one_pm = sign(randn(maximum_dimension))
@@ -80,7 +82,7 @@ module BBOBFunctions
     (f::BBOBFunction)(x) = f.f(x)
     show(io::IO,f::BBOBFunction) =  print(io,f.name)
 
-    test_x_opt(f::BBOBFunction) = @assert f(f.x_opt) == f.f_opt
+    test_x_opt(f::BBOBFunction) = begin info(f); @assert f(f.x_opt) == f.f_opt end
 
 ## helpers to define function
 
@@ -181,7 +183,6 @@ module BBOBFunctions
         z = [ x5_opt[i]*x[i] < 25 ? x[i] : x5_opt[i] for i=1:D ]
         s = [sign(x5_opt[i])*10^((i-1)/(D-1))  for i=1:D] 
 
-        
         ∑( 5*abs(s[i]) -s[i]*z[i] for i=1:D ) + f5_opt
     end
 
@@ -207,10 +208,146 @@ module BBOBFunctions
     @BBOBFunction("Attractive Sector",6)
 
     
+    ## f7, Step Ellipsoidal Function
+    
+    @define_x_and_f_opt(7)
 
+    """ Step Ellipsoidal Function """
+    function f7(x) 
+        D = length(x)
+        
+        z = Λ(10,D)*R(D)*(x - x7_opt[1:D])
+        zhat_1 = copy(z[1])
+        
+        @inbounds for i=1:D 
+            z[i] = z[i] > 0.5 ? floor(0.5 + z[i]) : floor(0.5 + 10*z[i])/10
+        end
+        z = Q(D)*z
+         
+        0.1*max(abs(zhat_1)/(10^4), ∑( 10^(2*(i-1)/(D-1)) * z[i]^2 for i=1:D ) ) + f_pen(x) + f7_opt
+    end
+
+    @BBOBFunction("Step Ellipsoidal Function",7)
+    
+    ## f8, Rosenbrock Function, original
+    
+    @define_x_and_f_opt(8)
+
+    """ Rosenbrock Function, original """
+    function f8(x) 
+        D = length(x)
+        
+        z = max(1,√D/8)*(x - x8_opt[1:D]) + 1
+        
+        ∑( 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1 ) + f8_opt
+    end
+
+    @BBOBFunction("Rosenbrock Function, original",8)
+    
+    ## f9, Rosenbrock Function, rotated
+    
+    @define_x_and_f_opt(9)
+
+    """ Rosenbrock Function, rotated """
+    function f9(x) 
+        D = length(x)
+        
+        z = max(1,√D/8)*R(D)*(x - x9_opt[1:D]) + 1
+        
+        ∑( 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1 ) + f9_opt
+    end
+
+    @BBOBFunction("Rosenbrock Function, rotated",9)
+    
+    ## f10, Ellipsoidal Function
+    
+    @define_x_and_f_opt(10)
+
+    """ Ellipsoidal Function """
+    function f10(x) 
+        D = length(x)
+        
+        z = T_osz( R(D)*(x-x10_opt[1:D])) 
+        
+        ∑( C(i,D,6)*z[i]^2 for i=1:D ) + f10_opt
+    end
+
+    @BBOBFunction("Ellipsoidal Function",10)
+    
+    ## f11, Discus Function
+    
+    @define_x_and_f_opt(11)
+
+    """ Discus Function """
+    function f11(x) 
+        D = length(x)
+        
+        z = T_osz( R(D)*(x - x11_opt[1:D])) 
+        
+        10^6*z[1]^2 + ∑( z[i]^2 for i=2:D ) + f11_opt
+    end
+
+    @BBOBFunction("Discus Function",11)
+    
+    
+    ## f12, Bent Cigar Function
+    
+    @define_x_and_f_opt(12)
+
+    """ Bent Cigar Function """
+    function f12(x) 
+        D = length(x)
+        
+        z = R(D)*T_asy( R(D)*(x - x12_opt[1:D]), 0.5) 
+        
+        z[1]^2 + 10^6*∑( z[i]^2 for i=2:D ) + f12_opt
+    end
+
+    @BBOBFunction("Bent Cigar Function",12)
+    
+    
+    ## f13, Sharp Ridge Function
+    
+    @define_x_and_f_opt(13)
+
+    """ Sharp Ridge Function """
+    function f13(x)
+        D = length(x)
+        
+        z = Q(D)*Λ(10,D)*R(D)*(x - x13_opt[1:D])
+        
+        z[1]^2 + 100*√(∑(z[i]^2 for i=2:D )) + f13_opt
+    end
+
+    @BBOBFunction("Sharp Ridge Function",13)
+    
+    
+    ## f14, Different Powers Function
+    
+    @define_x_and_f_opt(14)
+
+    """ Different Powers Function """
+    function f14(x)
+        D = length(x)
+        
+        z = R(D)*(x - x14_opt[1:D])
+        
+        √(∑(abs(z[i])^(2+4(i-1)/(D-1)) for i=1:D )) + f14_opt
+    end
+
+    @BBOBFunction("Different Powers Function",14)
+    
+        
 ## Tests
 
     map(test_x_opt,enumerate(BBOBFunction))
+
+    
+
+##
+
+
+
 
     #x = [collect(linspace(-10,10,500)) collect(linspace(-10,10,500))]
     #
