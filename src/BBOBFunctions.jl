@@ -1,6 +1,6 @@
 module BBOBFunctions
 
-    using Distributions, Memoize
+    using Distributions, Memoize, Compat
 
     import Base: enumerate, show
     export show
@@ -56,16 +56,16 @@ module BBOBFunctions
     
     f_pen(x) =  sum(max(0,abs(xi)-5)^2 for xi in x)
     
-    const one_pm = sign(randn(maximum_dimension))
+    @compat const one_pm = sign.(randn(maximum_dimension))
     
     #rotation matrices (probably a bit wrong)
     @memoize function Q(D)
         r = randn(D); r = r/norm(r)
-        Q = [r nullspace(r')]
+        Q = [r nullspace(Matrix(r'))]
     end
     @memoize function R(D)
         r = randn(D); r = r/norm(r)
-        R = [r nullspace(r')]
+        R = [r nullspace(Matrix(r'))]
     end
     
     ∑(x) = sum(x)
@@ -346,7 +346,9 @@ module BBOBFunctions
 
 ##
 
-
+    function run_benchmark()
+        include(joinpath(Pkg.dir(),"BBOBFunctions","src","run_benchmark.jl"))
+    end
 
 
     #x = [collect(linspace(-10,10,500)) collect(linspace(-10,10,500))]

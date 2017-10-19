@@ -16,7 +16,7 @@ import Base.minimum
 ## Optim
 
     fit(opt::Optim.Optimizer,f,D,run_length) =
-        optimize(f, pinit(D), NelderMead(), Optim.Options(iterations=run_length,g_tol=1e-12))
+        optimize(f, pinit(D), NelderMead(), Optim.Options(f_calls_limit=run_length,g_tol=1e-12))
         
     minimum(mfit::Optim.OptimizationResults) = mfit.minimum
     minimizer(mfit::Optim.OptimizationResults) = mfit.minimizer
