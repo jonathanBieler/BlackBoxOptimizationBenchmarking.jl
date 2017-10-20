@@ -1,4 +1,4 @@
-import Base.minimum
+import Base: minimum, string
 
 # Define fit, minimum and minimizer for each optimizer
 
@@ -21,6 +21,8 @@ import Base.minimum
     minimum(mfit::Optim.OptimizationResults) = mfit.minimum
     minimizer(mfit::Optim.OptimizationResults) = mfit.minimizer
 
+    string(opt::Optim.Optimizer) = string(typeof(opt).name)
+
     # Optim with restart
     try 
         type OptimRestart{T<:Optim.Optimizer}
@@ -34,11 +36,15 @@ import Base.minimum
         fits[indmin(mins)]
     end
 
+    string(opt::OptimRestart) = string("R-",string(opt.opt))
+
 ## BlackBoxOptim
 
     type BlackBoxOptimMethod 
         s::Symbol
     end
+
+    string(opt::BlackBoxOptimMethod) = string(opt.s)
     
     box(D) = fill((-5.0, 5.0),D)
     pinit(D) = 10*rand(D)-5

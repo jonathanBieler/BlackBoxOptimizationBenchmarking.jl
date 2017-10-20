@@ -8,46 +8,47 @@ using Gadfly
     include(joinpath(Pkg.dir(),"BBOBFunctions","src","benchmark.jl"))
     
     D = 3
-    Ntrials = 10
+    Ntrials = 15
     Δf = 1e-6
-    run_lengths = round(Int,linspace(20,10_000,10))
+    run_lengths = round(Int,linspace(20,20_000,10))
     funcs = 1:14#enumerate(BBOBFunctions.BBOBFunction)
     
-    runopt(op) = run_optimizer(op, run_lengths, Ntrials, D, Δf)
+    function runopt(op) 
+        println(string(op))
+        run_optimizer(op, run_lengths, Ntrials, D, Δf)
+    end
 end
 
 optimizers = [
     OptimRestart(GradientDescent()),
+    OptimRestart(NelderMead()),
     CMAESoptim,
     NelderMead(), GradientDescent(), BFGS(), 
+    BlackBoxOptimMethod(:adaptive_de_rand_1_bin_radiuslimited),
     BlackBoxOptimMethod(:adaptive_de_rand_1_bin),
     BlackBoxOptimMethod(:xnes),
     BlackBoxOptimMethod(:generating_set_search),
     BlackBoxOptimMethod(:de_rand_2_bin),
 ]
 
+opt_strings = map(string,optimizers)
+
 ## run benchmark
 
 mean_succ = zeros(length(optimizers),length(funcs),length(run_lengths))
 mean_dist, mean_fmin = similar(mean_succ), similar(mean_succ)
 
-for fi = 1:length(funcs)
-    warn(enumerate(BBOBFunctions.BBOBFunction)[fi])
+ops = [OptFun(optimizers[i],funcs[j]) for i=1:length(optimizers), j=1:length(funcs) ]
+out = pmap(runopt, ops)
 
-    ops = [OptFun(optimizers[i],funcs[fi]) for i=1:length(optimizers)]
-    out = pmap(runopt, ops)
-#    local_out = map(run, ops)
-    
-    for oi in 1:length(optimizers)
-        mean_succ[oi,fi,:], mean_dist[oi,fi,:], mean_fmin[oi,fi,:] = out[oi]
-    end
+for i=1:length(optimizers), j=1:length(funcs)
+    mean_succ[i,j,:], mean_dist[i,j,:], mean_fmin[i,j,:] = out[i,j]
 end
 
 ## make plots
 
 outdir = joinpath(Pkg.dir(),"BBOBFunctions","data","plots")
 
-opt_strings = ["GradientDescent-R","CMAES","Simplex","GD","BFGS","a_de_rand_1_bin","xnes","generating_set_search","de_rand_2_bin"]
 cols = Colors.distinguishable_colors(size(mean_succ,1),colorant"red")
 
 p = plot(

@@ -3,11 +3,11 @@ module CMAES
 
 ##
 
-using Distributions
+using Distributions, Compat
 
 
 
-weights(μ) = normalize!([ (log(μ+1) - log(i)) / (μ*log(μ+1) -sum(log(1:μ)) ) for i =1:μ],1)
+@compat weights(μ) = normalize!([ (log.(μ+1) - log(i)) / (μ*log.(μ+1) -sum(log.(1:μ)) ) for i =1:μ],1)
 
 average_x(x::Array{Float64,1},w,μ) = x
 average_x(x::Array{Float64,2},w,μ) = sum( [x[i,:]*w[i] for i=1:μ] ) 
