@@ -2,6 +2,28 @@ import Base: minimum, string
 
 # Define fit, minimum and minimizer for each optimizer
 
+## NLopt
+
+type NLoptOptimMethod 
+    s::Symbol
+end
+string(opt::NLoptOptimMethod) = string("NLopt.",opt.s)
+
+function fit(NLmeth::NLoptOptimMethod,f,D,run_length)  
+    opt = Opt(NLmeth.s, D)
+    min_objective!(opt, (p,g) -> f(p) ) #NLopt expect gradient
+    maxeval!(opt,run_length)
+    minf,minx,ret = NLopt.optimize(opt, pinit(D))
+    return NLmeth, minx, minf
+end
+minimum(mfit::Tuple{NLoptOptimMethod,Array{Float64,1},Float64}) = mfit[3]
+minimizer(mfit::Tuple{NLoptOptimMethod,Array{Float64,1},Float64}) = mfit[2]
+
+#opt = Opt(:LN_BOBYQA, 3)
+#min_objective!(opt,(p,g)->BBOBFunctions.F1.f(p))
+#maxeval!(opt,1000)
+#minf,minx,ret = NLopt.optimize(opt, pinit(D))
+
 ## my cmaes
 
     include("cmaes.jl")
@@ -9,14 +31,14 @@ import Base: minimum, string
 
     type CMAESoptim end
 
-    fit(::Type{CMAESoptim},f,D,run_length) = CMAES.cmaes(f, pinit(D), 1, run_length, round(Int, 3 + floor(3log(D))))
+    fit(::Type{CMAESoptim},f,D,run_length) = CMAES.cmaes(f, pinit(D), 3.0, run_length, round(Int, 3 + floor(3log(D))))
     minimum(mfit::Tuple{Array{Float64,1},Float64}) = mfit[2]
     minimizer(mfit::Tuple{Array{Float64,1},Float64}) = mfit[1]
 
 ## Optim
 
     fit(opt::Optim.Optimizer,f,D,run_length) =
-        optimize(f, pinit(D), NelderMead(), Optim.Options(f_calls_limit=run_length,g_tol=1e-12))
+        Optim.optimize(f, pinit(D), NelderMead(), Optim.Options(f_calls_limit=run_length,g_tol=1e-12))
         
     minimum(mfit::Optim.OptimizationResults) = mfit.minimum
     minimizer(mfit::Optim.OptimizationResults) = mfit.minimizer
@@ -25,7 +47,7 @@ import Base: minimum, string
 
     # Optim with restart
     try 
-        type OptimRestart{T<:Optim.Optimizer}
+        type OptimRestart{T}
             opt::T
         end
     end
@@ -43,8 +65,7 @@ import Base: minimum, string
     type BlackBoxOptimMethod 
         s::Symbol
     end
-
-    string(opt::BlackBoxOptimMethod) = string(opt.s)
+    string(opt::BlackBoxOptimMethod) = string("BBO.",opt.s)
     
     box(D) = fill((-5.0, 5.0),D)
     pinit(D) = 10*rand(D)-5

@@ -116,6 +116,7 @@ module BBOBFunctions
         end)
     end
     
+    
 ## Functions
 
     ## f1, Sphere Function
@@ -337,6 +338,20 @@ module BBOBFunctions
 
     @BBOBFunction("Different Powers Function",14)
     
+    ## f15, Rastrigin Function
+
+    @define_x_and_f_opt(15)
+    
+    """ Rastrigin Function """
+    function f15(x)
+        
+        D = length(x)
+        z = R(D)*Λ(10,D)*Q(D)*T_asy(T_osz( R(D)*(x-x15_opt[1:D]) ),0.2)
+        10*(D - ∑( cos(2*π*z[i]) for i=1:D )) + norm(z)^2 + f15_opt
+
+    end
+    
+    @BBOBFunction("Rastrigin Function",15)
         
 ## Tests
 

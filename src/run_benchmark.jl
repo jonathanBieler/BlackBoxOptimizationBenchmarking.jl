@@ -7,10 +7,10 @@ using Gadfly
 @everywhere begin
     include(joinpath(Pkg.dir(),"BBOBFunctions","src","benchmark.jl"))
     
-    D = 3
-    Ntrials = 15
+    D = 5
+    Ntrials = 30
     Δf = 1e-6
-    run_lengths = round(Int,linspace(20,20_000,10))
+    run_lengths = round.(Int,linspace(20,50_000,20))
     funcs = 1:14#enumerate(BBOBFunctions.BBOBFunction)
     
     function runopt(op) 
@@ -23,11 +23,15 @@ optimizers = [
     OptimRestart(GradientDescent()),
     OptimRestart(NelderMead()),
     CMAESoptim,
-    NelderMead(), GradientDescent(), BFGS(), 
+    NelderMead(), GradientDescent(), 
     BlackBoxOptimMethod(:adaptive_de_rand_1_bin_radiuslimited),
     BlackBoxOptimMethod(:adaptive_de_rand_1_bin),
-    BlackBoxOptimMethod(:xnes),
-    BlackBoxOptimMethod(:generating_set_search),
+    NLoptOptimMethod(:LN_BOBYQA),
+    NLoptOptimMethod(:LN_PRAXIS),
+    OptimRestart(NLoptOptimMethod(:LN_PRAXIS)),
+    #NLoptOptimMethod(:LN_SBPLX), # this guy segfault
+    #BlackBoxOptimMethod(:xnes),
+    #BlackBoxOptimMethod(:generating_set_search),
     BlackBoxOptimMethod(:de_rand_2_bin),
 ]
 
@@ -38,17 +42,25 @@ opt_strings = map(string,optimizers)
 mean_succ = zeros(length(optimizers),length(funcs),length(run_lengths))
 mean_dist, mean_fmin = similar(mean_succ), similar(mean_succ)
 
+runtime = zeros(length(optimizers),length(funcs))
+
 ops = [OptFun(optimizers[i],funcs[j]) for i=1:length(optimizers), j=1:length(funcs) ]
 out = pmap(runopt, ops)
 
 for i=1:length(optimizers), j=1:length(funcs)
-    mean_succ[i,j,:], mean_dist[i,j,:], mean_fmin[i,j,:] = out[i,j]
+    mean_succ[i,j,:], mean_dist[i,j,:], mean_fmin[i,j,:], runtime[i,j] = out[i,j]
 end
+
+## save output
+outdir = joinpath(Pkg.dir(),"BBOBFunctions","data")
+
+writedlm(joinpath(outdir,"mean_succ.txt"),mean_succ)
+writedlm(joinpath(outdir,"mean_dist.txt"),mean_dist)
+writedlm(joinpath(outdir,"mean_fmin.txt"),mean_fmin)
 
 ## make plots
 
 outdir = joinpath(Pkg.dir(),"BBOBFunctions","data","plots")
-
 cols = Colors.distinguishable_colors(size(mean_succ,1),colorant"red")
 
 p = plot(
@@ -82,5 +94,17 @@ p = plot(
 )
 
 draw(PDF(joinpath(outdir,"mean_dist.pdf"),16cm,12cm),p)
+
+## runtime
+
+p = plot(
+    layer(x=opt_strings, y=mean(runtime,2)/minimum(mean(runtime,2)),Geom.bar),
+    Guide.title("All functions"),
+    #Scale.x_log10,
+    #Scale.y_log10,
+)
+
+draw(PDF(joinpath(outdir,"runtime.pdf"),16cm,12cm),p)
+
 
 ##

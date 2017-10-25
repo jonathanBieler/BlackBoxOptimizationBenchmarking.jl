@@ -3,30 +3,32 @@ module CMAES
 
 ##
 
-using Distributions, Compat
-
-
+using Distributions, Compat, PDMats
 
 @compat weights(μ) = normalize!([ (log.(μ+1) - log(i)) / (μ*log.(μ+1) -sum(log.(1:μ)) ) for i =1:μ],1)
 
-average_x(x::Array{Float64,1},w,μ) = x
-average_x(x::Array{Float64,2},w,μ) = sum( [x[i,:]*w[i] for i=1:μ] ) 
+function average_x!(out::Vector{T},x::Matrix{T},w::Vector{T},μ) where {T <:Number} 
+    fill!(out,0)
+    for i=1:μ
+        for j=1:size(x,1)
+            out[j] += x[j,i]*w[i] 
+        end
+    end
+end
 
-function init_parameters(x,λ)
-    n = length(x)
+function init_parameters(xinit,λ,w,μ)
+    n = length(xinit)
 #    λ = round(Int, 3 + floor(3log(n)))
-    μ = floor(Int,λ/2)
-    w = weights(μ)
     
-    μ_eff = 1 / sum(w.^2)
-    c_σ =  (μ_eff + 2) / (n + μ_eff + 3)
+    μ_eff = 1.0 / sum(w.^2)
+    c_σ =  (μ_eff + 2.0) / (n + μ_eff + 3.0)
     
-    d_σ = 1 + 2*max(0, √((μ_eff-1)/(n+1)) -1) + c_σ
+    d_σ = 1.0 + 2.0*max(0, √((μ_eff-1)/(n+1)) -1) + c_σ
     
-    c_c = 4/(n+4) 
-    α = 2 / (n + √2)^2
+    c_c = 4.0/(n+4.0) 
+    α = 2.0 / (n + √2)^2
     
-    n, λ, μ, w, μ_eff, c_σ, d_σ, c_c, α
+    n, λ, μ_eff, c_σ, d_σ, c_c, α
 end
 
 function update_A_inv(A_inv, α, ν)
@@ -48,52 +50,71 @@ end
 Notation: α = c_cov
 
 """
-function cmaes(f::Function,x::AbstractVector,σ,niter,population_size)
+
+function cmaes(f::Function, xinit::Vector{T}, σ::T, niter::Int, λ::Int) where T
 
     #init everything
-
-        λ = population_size
-    n, λ, μ, w, μ_eff, c_σ, d_σ, c_c, α = init_parameters(x,λ)
-
-
+    μ = floor(Int,λ/2)
+    w = weights(μ)
+    n, λ, μ_eff, c_σ, d_σ, c_c, α = init_parameters(xinit,λ,w,μ)
+    
     A, A_inv = σ*eye(n), 1/σ*eye(n)
-    p_σ, p_c = 0., 0.
-    D = MultivariateNormal(zeros(n),eye(n))
+    p_σ, p_c = zeros(n), zeros(n)
+    D = MultivariateNormal(zeros(n),PDMats.PDiagMat(ones(n)))
     
     #start looping
     
-    z = zeros(λ,n)
-    x = zeros(λ,n)
-    x_w = zeros(λ,n)
+    x, z = zeros(n,λ), zeros(n,λ)
+    x_w, z_w = zeros(n), zeros(n)
+    
+    c = zeros(λ,n)
     fx = zeros(λ)
     
-    f_min = Inf
-    x_min = zeros(n)
-    
+    f_min, f_minp = Inf, Inf
+    x_min, x_minp = zeros(n), zeros(n)
+    tmp = zeros(n)
+
     for i = 1:niter
     
         # generate new points and evaluate fitness
-        
-        x_w = average_x(x,w,μ)
-        for k = 1:λ
-            z[k,:] = rand(D)
-            x[k,:] = x_w + σ*A*z[k,:]
-        
-            fx[k] = f(x[k,:])
+        average_x!(x_w,x,w,μ)
+        @inbounds for k = 1:λ
+            z[:,k] .= rand(D)
+            #x[:,k] .= x_w .+ σ*A*z[:,k]
+            
+            Base.BLAS.gemv!('N', σ, A, z[:,k], 0.0, tmp)#this isn't really faster
+            for i=1:n
+               x[i,k] = tmp[i] + x_w[i]
+            end
+
+            fx[k] = f(x[:,k])
         end
         
         # sort by fitness
         idx = sortperm(fx)
-        x, z = x[idx,:], z[idx,:]
+        x, z = x[:,idx], z[:,idx]
         
         # save best candidate
         if fx[idx[1]] < f_min
-            x_min = x[1,:]
+            f_minp = f_min
+            x_minp = x_min
+
+            x_min = x[:,1]
             f_min = fx[idx[1]]
+        end
+
+        # termination
+        if i > 1
+
+            f_tol = 1e-12
+            x_tol = 1e-12
+        
+            abs(f_min - f_minp) / (abs(f_min) + f_tol) < f_tol && return (x_min,f_min)
+            maximum( abs(x_min[i] - x_minp[i])  for i=1:n ) < x_tol && return (x_min,f_min)
         end
         
         # update
-        z_w = average_x(z,w,μ)
+        average_x!(z_w,z,w,μ)
         
         p_c = (1 - c_c)*p_c + √(c_σ*(2 - c_σ)*μ_eff) * A * z_w
         
