@@ -32,7 +32,7 @@ optimizers = [
     BlackBoxOptimMethod(:xnes),
     BlackBoxOptimMethod(:generating_set_search),
     BlackBoxOptimMethod(:de_rand_2_bin),
-    BlackBoxOptimMethod(:resampling_memetic_search),
+    #BlackBoxOptimMethod(:resampling_memetic_search),#poor performance 
 ]
 
 opt_strings = map(string,optimizers)
@@ -68,8 +68,8 @@ p = plot(
     Guide.title("All functions"), Guide.xlabel("Run Length / D"), Guide.ylabel("Success rate"), 
     Guide.manual_color_key("", opt_strings, cols)
 )
-draw(PDF(joinpath(outdir,"mean_succ.pdf"),18cm,12cm),p)
-draw(SVG(joinpath(outdir,"mean_succ.svg"),18cm,12cm),p)
+draw(PDF(joinpath(outdir,"mean_succ.pdf"),20cm,12cm),p)
+draw(SVG(joinpath(outdir,"mean_succ.svg"),20cm,12cm),p)
 
 ## f min
 
@@ -82,8 +82,8 @@ p = plot(
     Scale.y_log10,
 )
 
-draw(PDF(joinpath(outdir,"mean_fmin.pdf"),18cm,12cm),p)
-draw(SVG(joinpath(outdir,"mean_fmin.svg"),18cm,12cm),p)
+draw(PDF(joinpath(outdir,"mean_fmin.pdf"),20cm,12cm),p)
+draw(SVG(joinpath(outdir,"mean_fmin.svg"),20cm,12cm),p)
 
 ## distance to minimizer
 
@@ -95,19 +95,19 @@ p = plot(
     Scale.y_log10,
 )
 
-draw(PDF(joinpath(outdir,"mean_dist.pdf"),18cm,12cm),p)
-draw(SVG(joinpath(outdir,"mean_dist.svg"),18cm,12cm),p)
+draw(PDF(joinpath(outdir,"mean_dist.pdf"),20cm,12cm),p)
+draw(SVG(joinpath(outdir,"mean_dist.svg"),20cm,12cm),p)
 
 ## runtime
 
 p = plot(
     layer(x=opt_strings, y=mean(runtime,2)/minimum(mean(runtime,2)),Geom.bar),
-    Guide.title("All functions"), Guide.xlabel(""), Guide.ylabel("Run Time"), 
+    Guide.title("All functions"), Guide.xlabel(""), Guide.ylabel("Relative Run Time"), 
     #Scale.x_log10,
     #Scale.y_log10,
 )
 
-draw(PDF(joinpath(outdir,"runtime.pdf"),18cm,12cm),p)
-draw(SVG(joinpath(outdir,"runtime.svg"),18cm,12cm),p)
+draw(PDF(joinpath(outdir,"runtime.pdf"),20cm,12cm),p)
+draw(SVG(joinpath(outdir,"runtime.svg"),20cm,12cm),p)
 
 ##

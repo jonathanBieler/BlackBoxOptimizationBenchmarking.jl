@@ -5,7 +5,7 @@ module CMAES
 
 using Distributions, Compat, PDMats
 
-@compat weights(μ) = normalize!([ (log.(μ+1) - log(i)) / (μ*log.(μ+1) -sum(log.(1:μ)) ) for i =1:μ],1)
+weights(μ) = normalize!([ (log.(μ+1) - log(i)) / (μ*log.(μ+1) -sum(log.(1:μ)) ) for i =1:μ],1)
 
 function average_x!(out::Vector{T},x::Matrix{T},w::Vector{T},μ) where {T <:Number} 
     fill!(out,0)
@@ -16,16 +16,19 @@ function average_x!(out::Vector{T},x::Matrix{T},w::Vector{T},μ) where {T <:Numb
     end
 end
 
+# https://hal.inria.fr/inria-00382093/PDF/hansen2009bbi.pdf
 function init_parameters(xinit,λ,w,μ)
     n = length(xinit)
 #    λ = round(Int, 3 + floor(3log(n)))
     
     μ_eff = 1.0 / sum(w.^2)
-    c_σ =  (μ_eff + 2.0) / (n + μ_eff + 3.0)
+    c_σ =  (μ_eff + 2.0) / (n + μ_eff + 5.0)
     
     d_σ = 1.0 + 2.0*max(0, √((μ_eff-1)/(n+1)) -1) + c_σ
     
+    #c_c = 4.0/(n+4.0) 
     c_c = 4.0/(n+4.0) 
+
     α = 2.0 / (n + √2)^2
     
     n, λ, μ_eff, c_σ, d_σ, c_c, α
