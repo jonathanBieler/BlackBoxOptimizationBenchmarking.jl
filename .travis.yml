@@ -1,11 +1,9 @@
-# Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
+os:
+    - linux
+    - osx
 julia:
-  - nightly
-  - 0.6
-
-julia -e 'Pkg.clone(pwd())'
-julia -e 'Pkg.build("$name")'
-if [ -f test/runtests.jl ]; then
-  julia --check-bounds=yes -e 'Pkg.test("$name", coverage=true)'
-fi
+    - 0.6
+    - nightly
+notifications:
+  email: false
