@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:gadfly="http://www.gadflyjl.org/ns"
+     version="1.2"
+     width="160mm" height="120mm" viewBox="0 0 160 120"
+     stroke="none"
+     fill="#000000"
+     stroke-width="0.3"
+     font-size="3.88"
+>
+<g class="plotroot yscalable" id="img-4bffb7ae-1">
+  <g class="guide xlabels" font-size="2.82" font-family="'PT Sans Caption','Helvetica Neue','Helvetica',sans-serif" fill="#6C606B" id="img-4bffb7ae-2">
+    <text x="25.27" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 25.27, 54.66)">R-Optim.GradientDescent</text>
+    <text x="36.55" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 36.55, 54.66)">R-Optim.NelderMead</text>
+    <text x="47.83" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 47.83, 54.66)">CMAESoptim</text>
+    <text x="59.11" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 59.11, 54.66)">Optim.NelderMead</text>
+    <text x="70.39" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 70.39, 54.66)">Optim.GradientDescent</text>
+    <text x="81.68" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 81.68, 54.66)">BBO.adaptive_de_rand_1_bin_radiuslimited</text>
+    <text x="92.96" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 92.96, 54.66)">BBO.adaptive_de_rand_1_bin</text>
+    <text x="104.24" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 104.24, 54.66)">NLopt.LN_BOBYQA</text>
+    <text x="115.52" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 115.52, 54.66)">BBO.xnes</text>
+    <text x="126.8" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 126.8, 54.66)">BBO.generating_set_search</text>
+    <text x="138.08" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 138.08, 54.66)">BBO.de_rand_2_bin</text>
+    <text x="149.36" y="54.66" text-anchor="end" dy="0.35em" transform="rotate(-90, 149.36, 54.66)">BBO.resampling_memetic_search</text>
+  </g>
+<g clip-path="url(#img-4bffb7ae-3)">
+  <g id="img-4bffb7ae-4">
+    <g pointer-events="visible" opacity="1" fill="#000000" fill-opacity="0.000" stroke="#000000" stroke-opacity="0.000" class="guide background" id="img-4bffb7ae-5">
+      <rect x="19.63" y="10.61" width="135.37" height="43.05"/>
+    </g>
+    <g class="guide ygridlines xfixed" stroke-dasharray="0.5,0.5" stroke-width="0.2" stroke="#D0D0E0" id="img-4bffb7ae-6">
+      <path fill="none" d="M19.63,51.66 L 155 51.66"/>
+      <path fill="none" d="M19.63,38.64 L 155 38.64"/>
+      <path fill="none" d="M19.63,25.63 L 155 25.63"/>
+      <path fill="none" d="M19.63,12.61 L 155 12.61"/>
+    </g>
+    <g class="guide xgridlines yfixed" stroke-dasharray="0.5,0.5" stroke-width="0.2" stroke="#D0D0E0" id="img-4bffb7ae-7">
+      <path fill="none" d="M30.91,10.61 L 30.91 53.66"/>
+      <path fill="none" d="M42.19,10.61 L 42.19 53.66"/>
+      <path fill="none" d="M53.47,10.61 L 53.47 53.66"/>
+      <path fill="none" d="M64.75,10.61 L 64.75 53.66"/>
+      <path fill="none" d="M76.04,10.61 L 76.04 53.66"/>
+      <path fill="none" d="M87.32,10.61 L 87.32 53.66"/>
+      <path fill="none" d="M98.6,10.61 L 98.6 53.66"/>
+      <path fill="none" d="M109.88,10.61 L 109.88 53.66"/>
+      <path fill="none" d="M121.16,10.61 L 121.16 53.66"/>
+      <path fill="none" d="M132.44,10.61 L 132.44 53.66"/>
+      <path fill="none" d="M143.72,10.61 L 143.72 53.66"/>
+    </g>
+    <g class="plotpanel" id="img-4bffb7ae-8">
+      <g shape-rendering="crispEdges" stroke-width="0.3" id="img-4bffb7ae-9">
+        <g stroke="#000000" stroke-opacity="0.000" class="geometry" fill="#00BFFF" id="img-4bffb7ae-10">
+          <rect x="19.61" y="47.39" width="11.33" height="4.27"/>
+          <rect x="30.89" y="47.41" width="11.33" height="4.25"/>
+          <rect x="42.17" y="39.8" width="11.33" height="11.86"/>
+          <rect x="53.45" y="51.4" width="11.33" height="0.26"/>
+          <rect x="64.73" y="51.4" width="11.33" height="0.26"/>
+          <rect x="76.01" y="40.2" width="11.33" height="11.46"/>
+          <rect x="87.29" y="40.29" width="11.33" height="11.37"/>
+          <rect x="98.57" y="50.13" width="11.33" height="1.53"/>
+          <rect x="109.85" y="41.74" width="11.33" height="9.92"/>
+          <rect x="121.13" y="44.1" width="11.33" height="7.56"/>
+          <rect x="132.41" y="41.31" width="11.33" height="10.35"/>
+          <rect x="143.69" y="16.87" width="11.33" height="34.79"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</g>
+  <g class="guide ylabels" font-size="2.82" font-family="'PT Sans Caption','Helvetica Neue','Helvetica',sans-serif" fill="#6C606B" id="img-4bffb7ae-11">
+    <text x="18.63" y="51.66" text-anchor="end" dy="0.35em">0</text>
+    <text x="18.63" y="38.64" text-anchor="end" dy="0.35em">50</text>
+    <text x="18.63" y="25.63" text-anchor="end" dy="0.35em">100</text>
+    <text x="18.63" y="12.61" text-anchor="end" dy="0.35em">150</text>
+  </g>
+  <g font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" fill="#564A55" stroke="#000000" stroke-opacity="0.000" id="img-4bffb7ae-12">
+    <text x="8.81" y="30.14" text-anchor="middle" dy="0.35em" transform="rotate(-90, 8.81, 32.14)">Run Time</text>
+  </g>
+  <g font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" fill="#564A55" stroke="#000000" stroke-opacity="0.000" id="img-4bffb7ae-13">
+    <text x="87.32" y="5" text-anchor="middle" dy="0.6em">All functions</text>
+  </g>
+</g>
+<defs>
+  <clipPath id="img-4bffb7ae-3">
+  <path d="M19.63,10.61 L 155 10.61 155 53.66 19.63 53.66" />
+</clipPath>
+</defs>
+</svg>

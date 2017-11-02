@@ -75,5 +75,3 @@ minimizer(mfit::Tuple{NLoptOptimMethod,Array{Float64,1},Float64}) = mfit[2]
 
     minimum(mfit::BlackBoxOptim.OptimizationResults) = best_fitness(mfit)
     minimizer(mfit::BlackBoxOptim.OptimizationResults) = best_candidate(mfit)
-
-    

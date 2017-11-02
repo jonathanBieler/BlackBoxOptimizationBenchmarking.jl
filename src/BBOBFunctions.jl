@@ -82,7 +82,7 @@ module BBOBFunctions
     (f::BBOBFunction)(x) = f.f(x)
     show(io::IO,f::BBOBFunction) =  print(io,f.name)
 
-    test_x_opt(f::BBOBFunction) = begin info(f); @assert f(f.x_opt) == f.f_opt end
+    test_x_opt(f::BBOBFunction) = begin info(f); @assert f(f.x_opt) ≈ f.f_opt end
 
 ## helpers to define function
 
@@ -149,7 +149,7 @@ module BBOBFunctions
     function f3(x) 
         D = length(x)
         z = Λ(10,D) * T_asy(T_osz(x-x3_opt[1:D]),0.2)
-        10*(D - ∑( cos(2*π*z[i]) for i=1:D )) + norm(z)^2 + f3_opt
+        10*(D - ∑( cos(2π*z[i]) for i=1:D )) + norm(z)^2 + f3_opt
     end
 
     @BBOBFunction("Rastrigin",3)
@@ -168,7 +168,7 @@ module BBOBFunctions
             @inbounds z[i] = s[i]*z[i] 
         end
 
-        10*(D - ∑( cos(2*π*z[i]) for i=1:D )) + norm(z)^2 + 100*f_pen(x) + f4_opt
+        10*(D - ∑( cos(2π*z[i]) for i=1:D )) + norm(z)^2 + 100*f_pen(x) + f4_opt
     end
 
     @BBOBFunction("Buche-Rastrigin",4)
@@ -344,15 +344,102 @@ module BBOBFunctions
     
     """ Rastrigin Function """
     function f15(x)
-        
         D = length(x)
-        z = R(D)*Λ(10,D)*Q(D)*T_asy(T_osz( R(D)*(x-x15_opt[1:D]) ),0.2)
-        10*(D - ∑( cos(2*π*z[i]) for i=1:D )) + norm(z)^2 + f15_opt
 
+        z = R(D)*Λ(10,D)*Q(D)*T_asy(T_osz( R(D)*(x-x15_opt[1:D]) ),0.2)
+        10*(D - ∑( cos(2π*z[i]) for i=1:D )) + norm(z)^2 + f15_opt
     end
     
     @BBOBFunction("Rastrigin Function",15)
+
+    ## f16, Weierstrass Function
+
+    @define_x_and_f_opt(16)
+    
+    const f0 = ∑( 1/2^k * cos(2π*3^k*1/2) for k=0:11 )
+
+    """ Weierstrass Function """
+    function f16(x)
+        D = length(x)
+
+        z = R(D)*Λ(1/100,D)*Q(D)*T_osz( R(D)*(x-x16_opt[1:D]) )
+        s = ∑( ∑( 1/2^k * cos(2π*3^k*(z[i]+1/2)) for k=0:11 ) for i=1:D )
+        10*( 1/D*s - f0 )^3 + 10/D*f_pen(x) + f16_opt
+    end
+    
+    @BBOBFunction("Weierstrass Function",16)
+
+    ## f17, Schaffers F7 Function
+    
+    @define_x_and_f_opt(17)
+    
+    """ Schaffers F7 Function"""
+    function f17(x)
+        D = length(x)
+
+        z = Λ(10,D)*Q(D)*T_asy( R(D)*(x-x17_opt[1:D]), 0.5)
+        s = [√(z[i]^2 + z[i+1]^2) for i=1:D-1]
         
+        (1/(D-1)*∑( √s[i]*(1 + sin(50*s[i]^1/5 )^2 ) for i=1:D-1 ))^2 + 10*f_pen(x) + f17_opt
+    end
+    
+    @BBOBFunction("Schaffers F7 Function",17)
+
+    ## f18, Schaffers F7 Function, moderately ill-conditioned
+
+    @define_x_and_f_opt(18)
+    
+    """ Schaffers F7 Function, moderately ill-conditioned """
+    function f18(x)
+        D = length(x)
+
+        z = Λ(1000,D)*Q(D)*T_asy( R(D)*(x-x18_opt[1:D]), 0.5)
+        s = [√(z[i]^2 + z[i+1]^2) for i=1:D-1]
+        
+        (1/(D-1)*∑( √s[i]*(1 + sin(50*s[i]^1/5 )^2 ) for i=1:D-1 ))^2 + 10*f_pen(x) + f18_opt
+    end
+    
+    @BBOBFunction("Schaffers F7 Function, moderately ill-conditioned",18)
+        
+
+    ## f19, Composite Griewank-Rosenbrock Function F8F2
+
+    @define_x_and_f_opt(19)
+    
+    """ Composite Griewank-Rosenbrock Function F8F2 """
+    function f19(x)
+        D = length(x)
+
+        z = max(1,√D/8)*R(D)*(x - x19_opt[1:D]) + 1
+        s = [ 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1]
+        
+        10/(D-1)*∑( s[i]/4000 -cos(s[i]) for i=1:D-1 ) + 10 + f19_opt
+    end
+    
+    @BBOBFunction("Composite Griewank-Rosenbrock Function F8F2",19)
+
+
+    ## f20, Schwefel Function
+    # https://github.com/numbbo/coco/issues/837
+
+    const x20_opt = 4.2096874633/2 * one_pm
+    const f20_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)),2)))
+    
+    """ Schwefel Function """
+    function f20(x)
+        D = length(x)
+
+        x = 2*one_pm[1:D] .* x
+        
+        z = [i==1 ? x[1] : x[i] + 0.25*(x[i-1]-2*abs(x20_opt[i-1]) ) for i=1:D]
+        z = 100*( Λ(10,D)*(z- 2*abs.(x20_opt[1:D]) ) + 2*abs.(x20_opt[1:D]) )
+        
+        -1/(100*D)*∑( z[i]*sin(√(abs(z[i]))) for i=1:D ) + 4.189828872724339 + 100*f_pen(z/100) + f20_opt
+    end
+    
+    @BBOBFunction("Schwefel Function",20)
+
+
 ## Tests
 
     map(test_x_opt,enumerate(BBOBFunction))
