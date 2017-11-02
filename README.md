@@ -11,6 +11,10 @@ A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.
 
 ![benchmark](./data/plots/mean_succ.svg)
 
+![benchmark](./data/plots/mean_fmin.svg)
+
+![benchmark](./data/plots/runtime.svg)
+
 Reference:
 
 http://coco.lri.fr/downloads/download15.01/bbobdocfunctions.pdf
