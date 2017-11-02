@@ -9,7 +9,7 @@
 
 A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.gforge.inria.fr) (BBOB) functions.
 
-![benchmark](/data/plots/mean_succ.svg?raw=true "Benchmark")
+![benchmark](./data/plots/mean_succ.svg)
 
 Reference:
 
