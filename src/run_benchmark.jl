@@ -68,8 +68,8 @@ p = plot(
     Guide.title("All functions"), Guide.xlabel("Run Length / D"), Guide.ylabel("Success rate"), 
     Guide.manual_color_key("", opt_strings, cols)
 )
-draw(PDF(joinpath(outdir,"mean_succ.pdf"),16cm,12cm),p)
-draw(SVG(joinpath(outdir,"mean_succ.svg"),16cm,12cm),p)
+draw(PDF(joinpath(outdir,"mean_succ.pdf"),18cm,12cm),p)
+draw(SVG(joinpath(outdir,"mean_succ.svg"),18cm,12cm),p)
 
 ## f min
 
@@ -82,8 +82,8 @@ p = plot(
     Scale.y_log10,
 )
 
-draw(PDF(joinpath(outdir,"mean_fmin.pdf"),16cm,12cm),p)
-draw(SVG(joinpath(outdir,"mean_fmin.svg"),16cm,12cm),p)
+draw(PDF(joinpath(outdir,"mean_fmin.pdf"),18cm,12cm),p)
+draw(SVG(joinpath(outdir,"mean_fmin.svg"),18cm,12cm),p)
 
 ## distance to minimizer
 
@@ -95,8 +95,8 @@ p = plot(
     Scale.y_log10,
 )
 
-draw(PDF(joinpath(outdir,"mean_dist.pdf"),16cm,12cm),p)
-draw(SVG(joinpath(outdir,"mean_dist.svg"),16cm,12cm),p)
+draw(PDF(joinpath(outdir,"mean_dist.pdf"),18cm,12cm),p)
+draw(SVG(joinpath(outdir,"mean_dist.svg"),18cm,12cm),p)
 
 ## runtime
 
@@ -107,7 +107,7 @@ p = plot(
     #Scale.y_log10,
 )
 
-draw(PDF(joinpath(outdir,"runtime.pdf"),16cm,12cm),p)
-draw(SVG(joinpath(outdir,"runtime.svg"),16cm,12cm),p)
+draw(PDF(joinpath(outdir,"runtime.pdf"),18cm,12cm),p)
+draw(SVG(joinpath(outdir,"runtime.svg"),18cm,12cm),p)
 
 ##
