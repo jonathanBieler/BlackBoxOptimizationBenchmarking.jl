@@ -6,7 +6,7 @@ A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.
 
 ### Benchmark results
 
-![benchmark](./data/plots/mean_succ.svg)
+![benchmark](./data/plots/mean_succ.svg | width=250)
 
 ![benchmark](./data/plots/mean_fmin.svg)
 
@@ -14,8 +14,7 @@ A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.
 
 ### Functions
 
-Functions can be accessed as `BBOBFunctions.F1`, which returns a `BBOBFunction` with fields `f` containing the function itsel, `f_opt` its minimal
-value, and `x_opt` its minimizer, i.e. `f(x_opt) = f_opt`.
+Functions can be accessed as `BBOBFunctions.F1`, which returns a `BBOBFunction` with fields `f` containing the function itself, `f_opt` its minimal value, and `x_opt` its minimizer, i.e. `f(x_opt) = f_opt`.
 
 Functions can be listed using `enumerate`:
 
