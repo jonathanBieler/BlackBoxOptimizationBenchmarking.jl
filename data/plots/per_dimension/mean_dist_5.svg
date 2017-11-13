@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:gadfly="http://www.gadflyjl.org/ns"
+     version="1.2"
+     width="200mm" height="120mm" viewBox="0 0 200 120"
+     stroke="none"
+     fill="#000000"
+     stroke-width="0.3"
+     font-size="3.88"
+>
+<g class="plotroot xscalable yscalable" id="img-399d9fa3-1">
+  <g font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" fill="#564A55" stroke="#000000" stroke-opacity="0.000" id="img-399d9fa3-2">
+    <text x="80.18" y="108.39" text-anchor="middle" dy="0.6em">Run Length / D</text>
+  </g>
+  <g class="guide xlabels" font-size="2.82" font-family="'PT Sans Caption','Helvetica Neue','Helvetica',sans-serif" fill="#6C606B" id="img-399d9fa3-3">
+    <text x="22.75" y="101.72" text-anchor="middle" dy="0.6em">0</text>
+    <text x="61.04" y="101.72" text-anchor="middle" dy="0.6em">5.0×10³</text>
+    <text x="99.33" y="101.72" text-anchor="middle" dy="0.6em">1.0×10⁴</text>
+    <text x="137.62" y="101.72" text-anchor="middle" dy="0.6em">1.5×10⁴</text>
+  </g>
+  <g class="guide colorkey" id="img-399d9fa3-4">
+    <g fill="#4C404B" font-size="2.82" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" id="img-399d9fa3-5">
+      <text x="143.43" y="44.78" dy="0.35em">R-Optim.NelderMead</text>
+      <text x="143.43" y="48.41" dy="0.35em">CMAESoptim</text>
+      <text x="143.43" y="52.04" dy="0.35em">Optim.NelderMead</text>
+      <text x="143.43" y="55.66" dy="0.35em">BBO.adaptive_de_rand_1_bin_radiuslimited</text>
+      <text x="143.43" y="59.29" dy="0.35em">BBO.adaptive_de_rand_1_bin</text>
+      <text x="143.43" y="62.92" dy="0.35em">BBO.xnes</text>
+      <text x="143.43" y="66.54" dy="0.35em">BBO.generating_set_search</text>
+      <text x="143.43" y="70.17" dy="0.35em">BBO.de_rand_2_bin</text>
+    </g>
+    <g stroke="#000000" stroke-opacity="0.000" id="img-399d9fa3-6">
+      <rect x="140.62" y="43.88" width="1.81" height="1.81" fill="#FF0000"/>
+      <rect x="140.62" y="47.5" width="1.81" height="1.81" fill="#00F75A"/>
+      <rect x="140.62" y="51.13" width="1.81" height="1.81" fill="#003800"/>
+      <rect x="140.62" y="54.76" width="1.81" height="1.81" fill="#00AEFF"/>
+      <rect x="140.62" y="58.38" width="1.81" height="1.81" fill="#29003B"/>
+      <rect x="140.62" y="62.01" width="1.81" height="1.81" fill="#FFB6FF"/>
+      <rect x="140.62" y="65.64" width="1.81" height="1.81" fill="#FFBC00"/>
+      <rect x="140.62" y="69.26" width="1.81" height="1.81" fill="#542900"/>
+    </g>
+    <g fill="#362A35" font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" stroke="#000000" stroke-opacity="0.000" id="img-399d9fa3-7">
+      <text x="140.62" y="40.96"></text>
+    </g>
+  </g>
+<g clip-path="url(#img-399d9fa3-8)">
+  <g id="img-399d9fa3-9">
+    <g pointer-events="visible" opacity="1" fill="#000000" fill-opacity="0.000" stroke="#000000" stroke-opacity="0.000" class="guide background" id="img-399d9fa3-10">
+      <rect x="20.75" y="10.61" width="118.88" height="90.1"/>
+    </g>
+    <g class="guide ygridlines xfixed" stroke-dasharray="0.5,0.5" stroke-width="0.2" stroke="#D0D0E0" id="img-399d9fa3-11">
+      <path fill="none" d="M20.75,98.72 L 139.62 98.72"/>
+      <path fill="none" d="M20.75,81.49 L 139.62 81.49"/>
+      <path fill="none" d="M20.75,64.27 L 139.62 64.27"/>
+      <path fill="none" d="M20.75,47.05 L 139.62 47.05"/>
+      <path fill="none" d="M20.75,29.83 L 139.62 29.83"/>
+      <path fill="none" d="M20.75,12.61 L 139.62 12.61"/>
+    </g>
+    <g class="guide xgridlines yfixed" stroke-dasharray="0.5,0.5" stroke-width="0.2" stroke="#D0D0E0" id="img-399d9fa3-12">
+      <path fill="none" d="M22.75,10.61 L 22.75 100.72"/>
+      <path fill="none" d="M61.04,10.61 L 61.04 100.72"/>
+      <path fill="none" d="M99.33,10.61 L 99.33 100.72"/>
+      <path fill="none" d="M137.62,10.61 L 137.62 100.72"/>
+    </g>
+    <g class="plotpanel" id="img-399d9fa3-13">
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#542900" id="img-399d9fa3-14">
+        <path fill="none" d="M22.78,23.59 L 27.61 30.05 32.45 31.55 37.28 33.33 42.12 36.12 46.95 38.79 51.79 42.36 56.62 43.61 61.46 44.21 66.29 45.93 71.13 48.49 75.96 52.18 80.8 53.89 85.63 56.74 90.47 58.85 95.3 64.34 100.14 70.03 104.97 78 109.81 81.16 114.65 84.03"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#FFBC00" id="img-399d9fa3-15">
+        <path fill="none" d="M22.78,23.79 L 27.61 27.42 32.45 28.53 37.28 29.2 42.12 28.52 46.95 29.33 51.79 29.27 56.62 30.12 61.46 30.48 66.29 30.71 71.13 30.86 75.96 32.31 80.8 31.24 85.63 30.02 90.47 32.56 95.3 29.96 100.14 31.17 104.97 31.83 109.81 32.22 114.65 32.14"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#FFB6FF" id="img-399d9fa3-16">
+        <path fill="none" d="M22.78,23.11 L 27.61 33.71 32.45 40.75 37.28 34.76 42.12 36.54 46.95 42.09 51.79 35.17 56.62 38.36 61.46 40.14 66.29 41.43 71.13 41.66 75.96 34.8 80.8 35.59 85.63 40.03 90.47 40.98 95.3 40.8 100.14 36.57 104.97 42.11 109.81 39.62 114.65 37.22"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#29003B" id="img-399d9fa3-17">
+        <path fill="none" d="M22.78,23.52 L 27.61 30 32.45 36.13 37.28 42.93 42.12 48.3 46.95 56.07 51.79 62.4 56.62 72.61 61.46 80.66 66.29 87.06 71.13 91.66 75.96 93.09 80.8 92.87 85.63 93.24 90.47 92.8 95.3 93.04 100.14 93 104.97 92.91 109.81 93.77 114.65 93.46"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#00AEFF" id="img-399d9fa3-18">
+        <path fill="none" d="M22.78,23.71 L 27.61 31.71 32.45 39.44 37.28 46.53 42.12 52.43 46.95 62.13 51.79 71 56.62 76.29 61.46 88.2 66.29 93.12 71.13 91.44 75.96 93 80.8 92.32 85.63 93.12 90.47 93.01 95.3 93.28 100.14 93.47 104.97 92.73 109.81 93.21 114.65 93.11"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#003800" id="img-399d9fa3-19">
+        <path fill="none" d="M22.78,22.63 L 27.61 25.83 32.45 26.79 37.28 26.33 42.12 25.88 46.95 26.01 51.79 26.52 56.62 25.42 61.46 26.91 66.29 25.67 71.13 25.81 75.96 25.95 80.8 25.34 85.63 25.17 90.47 27.05 95.3 26.44 100.14 27.54 104.97 25.89 109.81 26.35 114.65 24.99"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#00F75A" id="img-399d9fa3-20">
+        <path fill="none" d="M22.78,22.61 L 27.61 28.58 32.45 28.11 37.28 28.49 42.12 28.81 46.95 28.24 51.79 28.01 56.62 28.19 61.46 28.56 66.29 28.72 71.13 28.06 75.96 28.12 80.8 29.18 85.63 27.99 90.47 29.23 95.3 27.98 100.14 28.29 104.97 28.06 109.81 28.8 114.65 28.17"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#FF0000" id="img-399d9fa3-21">
+        <path fill="none" d="M22.78,23.96 L 27.61 26.87 32.45 29.88 37.28 31.08 42.12 32.1 46.95 32.8 51.79 37.19 56.62 36.49 61.46 40.36 66.29 39.74 71.13 37.23 75.96 39.18 80.8 37.2 85.63 35.6 90.47 37.34 95.3 38.97 100.14 38.29 104.97 37.49 109.81 38.98 114.65 37.45"/>
+      </g>
+    </g>
+  </g>
+</g>
+  <g class="guide ylabels" font-size="2.82" font-family="'PT Sans Caption','Helvetica Neue','Helvetica',sans-serif" fill="#6C606B" id="img-399d9fa3-22">
+    <text x="19.74" y="98.72" text-anchor="end" dy="0.35em">10<tspan style="dominant-baseline:inherit" dy="-0.6em" font-size="83%">-8</tspan><tspan dy="0.498000em"></tspan></text>
+    <text x="19.74" y="81.49" text-anchor="end" dy="0.35em">10<tspan style="dominant-baseline:inherit" dy="-0.6em" font-size="83%">-6</tspan><tspan dy="0.498000em"></tspan></text>
+    <text x="19.74" y="64.27" text-anchor="end" dy="0.35em">10<tspan style="dominant-baseline:inherit" dy="-0.6em" font-size="83%">-4</tspan><tspan dy="0.498000em"></tspan></text>
+    <text x="19.74" y="47.05" text-anchor="end" dy="0.35em">10<tspan style="dominant-baseline:inherit" dy="-0.6em" font-size="83%">-2</tspan><tspan dy="0.498000em"></tspan></text>
+    <text x="19.74" y="29.83" text-anchor="end" dy="0.35em">10<tspan style="dominant-baseline:inherit" dy="-0.6em" font-size="83%">0</tspan><tspan dy="0.498000em"></tspan></text>
+    <text x="19.74" y="12.61" text-anchor="end" dy="0.35em">10<tspan style="dominant-baseline:inherit" dy="-0.6em" font-size="83%">2</tspan><tspan dy="0.498000em"></tspan></text>
+  </g>
+  <g font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" fill="#564A55" stroke="#000000" stroke-opacity="0.000" id="img-399d9fa3-23">
+    <text x="8.81" y="53.66" text-anchor="middle" dy="0.35em" transform="rotate(-90, 8.81, 55.66)">Distance to xmin</text>
+  </g>
+  <g font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" fill="#564A55" stroke="#000000" stroke-opacity="0.000" id="img-399d9fa3-24">
+    <text x="80.18" y="5" text-anchor="middle" dy="0.6em">All functions</text>
+  </g>
+</g>
+<defs>
+  <clipPath id="img-399d9fa3-8">
+  <path d="M20.75,10.61 L 139.62 10.61 139.62 100.72 20.75 100.72" />
+</clipPath>
+</defs>
+</svg>

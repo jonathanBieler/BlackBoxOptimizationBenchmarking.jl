@@ -5,7 +5,7 @@ module CMAES
 
 using Distributions, Compat, PDMats
 
-weights(μ) = normalize!([ (log.(μ+1) - log(i)) / (μ*log.(μ+1) -sum(log.(1:μ)) ) for i =1:μ],1)
+@compat weights(μ) = normalize!([ (log.(μ+1) - log(i)) / (μ*log.(μ+1) -sum(log.(1:μ)) ) for i =1:μ],1)
 
 function average_x!(out::Vector{T},x::Matrix{T},w::Vector{T},μ) where {T <:Number} 
     fill!(out,0)
@@ -16,19 +16,16 @@ function average_x!(out::Vector{T},x::Matrix{T},w::Vector{T},μ) where {T <:Numb
     end
 end
 
-# https://hal.inria.fr/inria-00382093/PDF/hansen2009bbi.pdf
 function init_parameters(xinit,λ,w,μ)
     n = length(xinit)
 #    λ = round(Int, 3 + floor(3log(n)))
     
     μ_eff = 1.0 / sum(w.^2)
-    c_σ =  (μ_eff + 2.0) / (n + μ_eff + 5.0)
+    c_σ =  (μ_eff + 2.0) / (n + μ_eff + 3.0)
     
     d_σ = 1.0 + 2.0*max(0, √((μ_eff-1)/(n+1)) -1) + c_σ
     
-    #c_c = 4.0/(n+4.0) 
     c_c = 4.0/(n+4.0) 
-
     α = 2.0 / (n + √2)^2
     
     n, λ, μ_eff, c_σ, d_σ, c_c, α
@@ -91,8 +88,14 @@ function cmaes(f::Function, xinit::Vector{T}, σ::T, niter::Int, λ::Int) where 
             end
 
             fx[k] = f(x[:,k])
+
+            isnan(fx[k]) && warn("Error function returned NaN for x=$(x[:,k])")
         end
-        
+
+        any(isnan.(x_w)) && warn(x_w)
+        isnan(σ) && warn(σ)
+        any(isnan.(A)) && info(A)
+
         # sort by fitness
         idx = sortperm(fx)
         x, z = x[:,idx], z[:,idx]
@@ -139,103 +142,4 @@ end
 
 ##
 end
-
-
-## test
-if false
-
-using BBOBFunctions
-
-D = 2
-niter = 2000
-
-x = randn(D)*10
-
-f = BBOBFunctions.f3
-
-@time pmin = CMAES.cmaes(f,x,1,niter,40)
-
-f(BBOBFunctions.x3_opt) - BBOBFunctions.f3_opt
-
-sleep(0.01)
-println(f(pmin) - BBOBFunctions.f3_opt)
-println(pmin - BBOBFunctions.x3_opt[1:D])
-
-## compare to BlackBoxOptim
-
-
-using BlackBoxOptim
-
-fit = bboptimize(f, Method=:generating_set_search, SearchRange = (-15.0, 15.0), NumDimensions = D,MaxFuncEvals=niter)
-pmin = best_candidate(fit)
-
-sleep(0.1)
-println(f(pmin) - BBOBFunctions.f3_opt)
-println(pmin - BBOBFunctions.x3_opt[1:D])
-
-## compare to other CMAES
-
-include("cmaes2.jl")
-
-pmin = cmaes(f,x,5*ones(D),stopeval=niter)
-
-println(f(pmin) - BBOBFunctions.f3_opt)
-println(pmin - BBOBFunctions.x3_opt[1:D])
-
-## benchmark
-
-Nrepeats = 30
-niters = [100 500 1000 5000]
-dimensions = [2]#collect(2:5:15)
-Nmethod = 2
-proportion = zeros(Nmethod,length(dimensions)*length(niters))
-x_val = zeros(length(dimensions)*length(niters))
-
-targetvalue = BBOBFunctions.f3_opt + 1/100*abs(BBOBFunctions.f3_opt)
-f = BBOBFunctions.f3
-
-ind_iter = 1
-for i = 1:length(dimensions)
-    
-    D = dimensions[i]
-
-    for niter in niters
-
-        fvalues = zeros(Nmethod,Nrepeats)
-        for r in 1:Nrepeats
-
-            
-            x = randn(D)*2
-            pmin = CMAES.cmaes(f,x,1,niter,50)
-            fvalues[1,r] = f(pmin)
-            
-            pmin = best_candidate(
-                bboptimize(f, Method=:generating_set_search, SearchRange = (-15.0, 15.0), NumDimensions = D,MaxFuncEvals=niter)
-            )
-            fvalues[2,r] = f(pmin)
-
-        end
-
-        warn(ind_iter)
-
-        for k=1:size(proportion,1)
-            proportion[k,ind_iter] = mean(fvalues[k,:] .< targetvalue)
-        end
-        x_val[ind_iter] = niter/D
-        ind_iter += 1
-        
-    end
-end
-
-p = plot(
-    layer(x=x_val,y=proportion[1,:],Geom.point,Geom.line),
-    layer(x=x_val,y=proportion[2,:],Geom.point,Geom.line,col("red"))
-)
-
-end
-##
-
-
-
-
 

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:gadfly="http://www.gadflyjl.org/ns"
+     version="1.2"
+     width="200mm" height="120mm" viewBox="0 0 200 120"
+     stroke="none"
+     fill="#000000"
+     stroke-width="0.3"
+     font-size="3.88"
+>
+<g class="plotroot xscalable yscalable" id="img-bc9d447b-1">
+  <g font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" fill="#564A55" stroke="#000000" stroke-opacity="0.000" id="img-bc9d447b-2">
+    <text x="80.18" y="108.39" text-anchor="middle" dy="0.6em">Run Length / D</text>
+  </g>
+  <g class="guide xlabels" font-size="2.82" font-family="'PT Sans Caption','Helvetica Neue','Helvetica',sans-serif" fill="#6C606B" id="img-bc9d447b-3">
+    <text x="22.75" y="101.72" text-anchor="middle" dy="0.6em">0</text>
+    <text x="41.89" y="101.72" text-anchor="middle" dy="0.6em">1.0×10³</text>
+    <text x="61.04" y="101.72" text-anchor="middle" dy="0.6em">2.0×10³</text>
+    <text x="80.18" y="101.72" text-anchor="middle" dy="0.6em">3.0×10³</text>
+    <text x="99.33" y="101.72" text-anchor="middle" dy="0.6em">4.0×10³</text>
+    <text x="118.47" y="101.72" text-anchor="middle" dy="0.6em">5.0×10³</text>
+    <text x="137.62" y="101.72" text-anchor="middle" dy="0.6em">6.0×10³</text>
+  </g>
+  <g class="guide colorkey" id="img-bc9d447b-4">
+    <g fill="#4C404B" font-size="2.82" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" id="img-bc9d447b-5">
+      <text x="143.43" y="44.78" dy="0.35em">R-Optim.NelderMead</text>
+      <text x="143.43" y="48.41" dy="0.35em">CMAESoptim</text>
+      <text x="143.43" y="52.04" dy="0.35em">Optim.NelderMead</text>
+      <text x="143.43" y="55.66" dy="0.35em">BBO.adaptive_de_rand_1_bin_radiuslimited</text>
+      <text x="143.43" y="59.29" dy="0.35em">BBO.adaptive_de_rand_1_bin</text>
+      <text x="143.43" y="62.92" dy="0.35em">BBO.xnes</text>
+      <text x="143.43" y="66.54" dy="0.35em">BBO.generating_set_search</text>
+      <text x="143.43" y="70.17" dy="0.35em">BBO.de_rand_2_bin</text>
+    </g>
+    <g stroke="#000000" stroke-opacity="0.000" id="img-bc9d447b-6">
+      <rect x="140.62" y="43.88" width="1.81" height="1.81" fill="#FF0000"/>
+      <rect x="140.62" y="47.5" width="1.81" height="1.81" fill="#00F75A"/>
+      <rect x="140.62" y="51.13" width="1.81" height="1.81" fill="#003800"/>
+      <rect x="140.62" y="54.76" width="1.81" height="1.81" fill="#00AEFF"/>
+      <rect x="140.62" y="58.38" width="1.81" height="1.81" fill="#29003B"/>
+      <rect x="140.62" y="62.01" width="1.81" height="1.81" fill="#FFB6FF"/>
+      <rect x="140.62" y="65.64" width="1.81" height="1.81" fill="#FFBC00"/>
+      <rect x="140.62" y="69.26" width="1.81" height="1.81" fill="#542900"/>
+    </g>
+    <g fill="#362A35" font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" stroke="#000000" stroke-opacity="0.000" id="img-bc9d447b-7">
+      <text x="140.62" y="40.96"></text>
+    </g>
+  </g>
+<g clip-path="url(#img-bc9d447b-8)">
+  <g id="img-bc9d447b-9">
+    <g pointer-events="visible" opacity="1" fill="#000000" fill-opacity="0.000" stroke="#000000" stroke-opacity="0.000" class="guide background" id="img-bc9d447b-10">
+      <rect x="20.75" y="10.61" width="118.88" height="90.1"/>
+    </g>
+    <g class="guide ygridlines xfixed" stroke-dasharray="0.5,0.5" stroke-width="0.2" stroke="#D0D0E0" id="img-bc9d447b-11">
+      <path fill="none" d="M20.75,98.72 L 139.62 98.72"/>
+      <path fill="none" d="M20.75,77.19 L 139.62 77.19"/>
+      <path fill="none" d="M20.75,55.66 L 139.62 55.66"/>
+      <path fill="none" d="M20.75,34.14 L 139.62 34.14"/>
+      <path fill="none" d="M20.75,12.61 L 139.62 12.61"/>
+    </g>
+    <g class="guide xgridlines yfixed" stroke-dasharray="0.5,0.5" stroke-width="0.2" stroke="#D0D0E0" id="img-bc9d447b-12">
+      <path fill="none" d="M22.75,10.61 L 22.75 100.72"/>
+      <path fill="none" d="M41.89,10.61 L 41.89 100.72"/>
+      <path fill="none" d="M61.04,10.61 L 61.04 100.72"/>
+      <path fill="none" d="M80.18,10.61 L 80.18 100.72"/>
+      <path fill="none" d="M99.33,10.61 L 99.33 100.72"/>
+      <path fill="none" d="M118.47,10.61 L 118.47 100.72"/>
+      <path fill="none" d="M137.62,10.61 L 137.62 100.72"/>
+    </g>
+    <g class="plotpanel" id="img-bc9d447b-13">
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#542900" id="img-bc9d447b-14">
+        <path fill="none" d="M22.78,24.09 L 28.83 29.18 34.87 31.07 40.92 31.77 46.96 33.05 53 34.36 59.05 35.39 65.09 35.31 71.14 36.51 77.18 36.66 83.22 37.41 89.27 37.99 95.31 36.87 101.36 37.89 107.4 38.01 113.44 38.28 119.49 38.58 125.53 38.02 131.58 38.86 137.62 39.88"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#FFBC00" id="img-bc9d447b-15">
+        <path fill="none" d="M22.78,23.77 L 28.83 30.9 34.87 29.74 40.92 30.61 46.96 32.04 53 31.8 59.05 31.23 65.09 31.83 71.14 34.13 77.18 32.9 83.22 32.41 89.27 33.53 95.31 33.86 101.36 32.83 107.4 33.25 113.44 33.83 119.49 33.21 125.53 34.63 131.58 33.67 137.62 34.82"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#FFB6FF" id="img-bc9d447b-16">
+        <path fill="none" d="M22.78,23.41 L 28.83 33.12 34.87 34.31 40.92 42.28 46.96 48.36 53 45.29 59.05 48.97 65.09 49.48 71.14 47.29 77.18 48.36 83.22 46.33 89.27 47.43 95.31 48.33 101.36 51.22 107.4 49.56 113.44 49.33 119.49 48.69 125.53 50.1 131.58 53.27 137.62 49.34"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#29003B" id="img-bc9d447b-17">
+        <path fill="none" d="M22.78,23.9 L 28.83 29.87 34.87 32.18 40.92 34.25 46.96 36.47 53 37.89 59.05 40.41 65.09 48.07 71.14 48.98 77.18 49.24 83.22 51.47 89.27 54.77 95.31 56.23 101.36 59.35 107.4 64.65 113.44 66.03 119.49 70.51 125.53 72.66 131.58 77.33 137.62 79"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#00AEFF" id="img-bc9d447b-18">
+        <path fill="none" d="M22.78,24.1 L 28.83 29.89 34.87 32.8 40.92 35.02 46.96 36.76 53 41.36 59.05 47.8 65.09 47.89 71.14 47.49 77.18 49.66 83.22 49.86 89.27 50.29 95.31 51.01 101.36 53.5 107.4 57.89 113.44 58.74 119.49 59.67 125.53 56.34 131.58 60.75 137.62 65.1"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#003800" id="img-bc9d447b-19">
+        <path fill="none" d="M22.78,22.78 L 28.83 24.75 34.87 24.79 40.92 24.6 46.96 24.94 53 24.43 59.05 24.46 65.09 24.45 71.14 24.95 77.18 24.73 83.22 24.68 89.27 24.43 95.31 24.17 101.36 25.08 107.4 24.47 113.44 24.81 119.49 24.57 125.53 24.45 131.58 24.61 137.62 24.45"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#00F75A" id="img-bc9d447b-20">
+        <path fill="none" d="M22.78,23.02 L 28.83 30.09 34.87 30.38 40.92 30.03 46.96 32.52 53 33.11 59.05 32.45 65.09 31.81 71.14 31.89 77.18 33.03 83.22 33.91 89.27 33.37 95.31 33.28 101.36 31.96 107.4 31.6 113.44 31.65 119.49 31.97 125.53 31.08 131.58 32.82 137.62 32.06"/>
+      </g>
+      <g stroke-width="0.3" fill="#000000" fill-opacity="0.000" class="geometry" stroke-dasharray="none" stroke="#FF0000" id="img-bc9d447b-21">
+        <path fill="none" d="M22.78,24.16 L 28.83 26.2 34.87 26.55 40.92 27.17 46.96 26.81 53 27.14 59.05 27.99 65.09 27.54 71.14 28.02 77.18 28.41 83.22 28.21 89.27 28.51 95.31 28.43 101.36 28.19 107.4 28.32 113.44 27.9 119.49 28.11 125.53 28.34 131.58 28.32 137.62 28.34"/>
+      </g>
+    </g>
+  </g>
+</g>
+  <g class="guide ylabels" font-size="2.82" font-family="'PT Sans Caption','Helvetica Neue','Helvetica',sans-serif" fill="#6C606B" id="img-bc9d447b-22">
+    <text x="19.74" y="98.72" text-anchor="end" dy="0.35em">10<tspan style="dominant-baseline:inherit" dy="-0.6em" font-size="83%">-6</tspan><tspan dy="0.498000em"></tspan></text>
+    <text x="19.74" y="77.19" text-anchor="end" dy="0.35em">10<tspan style="dominant-baseline:inherit" dy="-0.6em" font-size="83%">-4</tspan><tspan dy="0.498000em"></tspan></text>
+    <text x="19.74" y="55.66" text-anchor="end" dy="0.35em">10<tspan style="dominant-baseline:inherit" dy="-0.6em" font-size="83%">-2</tspan><tspan dy="0.498000em"></tspan></text>
+    <text x="19.74" y="34.14" text-anchor="end" dy="0.35em">10<tspan style="dominant-baseline:inherit" dy="-0.6em" font-size="83%">0</tspan><tspan dy="0.498000em"></tspan></text>
+    <text x="19.74" y="12.61" text-anchor="end" dy="0.35em">10<tspan style="dominant-baseline:inherit" dy="-0.6em" font-size="83%">2</tspan><tspan dy="0.498000em"></tspan></text>
+  </g>
+  <g font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" fill="#564A55" stroke="#000000" stroke-opacity="0.000" id="img-bc9d447b-23">
+    <text x="8.81" y="53.66" text-anchor="middle" dy="0.35em" transform="rotate(-90, 8.81, 55.66)">Distance to xmin</text>
+  </g>
+  <g font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" fill="#564A55" stroke="#000000" stroke-opacity="0.000" id="img-bc9d447b-24">
+    <text x="80.18" y="5" text-anchor="middle" dy="0.6em">All functions</text>
+  </g>
+</g>
+<defs>
+  <clipPath id="img-bc9d447b-8">
+  <path d="M20.75,10.61 L 139.62 10.61 139.62 100.72 20.75 100.72" />
+</clipPath>
+</defs>
+</svg>

@@ -1,3 +1,4 @@
+__precompile__()
 module BBOBFunctions
 
     using Distributions, Memoize, Compat
@@ -5,7 +6,6 @@ module BBOBFunctions
     import Base: enumerate, show
     export show
     
-
 ## Constants and Functions
 
     const maximum_dimension = 100
