@@ -6,7 +6,7 @@ A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.
 
 ### Benchmark results
 
-![benchmark](./data/plots/mean_succ.svg | width=250)
+![benchmark](./data/plots/mean_succ.svg)
 
 ![benchmark](./data/plots/mean_fmin.svg)
 
