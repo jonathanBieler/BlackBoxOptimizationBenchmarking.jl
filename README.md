@@ -1,6 +1,6 @@
-# BBOBFunctions.jl
+# BlackBoxOptimizationBenchmarking.jl
 
-[![Build Status](https://travis-ci.org/jonathanBieler/BBOBFunctions.jl.svg?branch=master)](https://travis-ci.org/jonathanBieler/BBOBFunctions.jl)
+[![Build Status](https://travis-ci.org/jonathanBieler/BlackBoxOptimizationBenchmarking.jl.svg?branch=master)](https://travis-ci.org/jonathanBieler/BlackBoxOptimizationBenchmarking.jl)
 
 A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.gforge.inria.fr) (BBOB) functions.
 
