@@ -1,22 +1,26 @@
 using Gadfly
 
+import Base: string
+    
+##
+
 #addprocs(2)
 
 ## Setup
 
 @everywhere begin
-    include(joinpath(Pkg.dir(),"BBOBFunctions","src","benchmark.jl"))
-    
+
+    using BlackBoxOptimizationBenchmarking
+    const BBOB = BlackBoxOptimizationBenchmarking
+    include(joinpath(Pkg.dir(),"BlackBoxOptimizationBenchmarking/scripts/optimizers_interface.jl"))
+
     dimensions = [5 10 30]
-    Ntrials = 15
+    Ntrials = 3
     Δf = 1e-6
-    run_lengths = round.(Int,linspace(20,60_000,20))
-    funcs = 1:length(enumerate(BBOBFunctions.BBOBFunction))
+#    run_lengths = round.(Int,linspace(20,60_000,20))
+    run_lengths = round.(Int,linspace(20,600,5))
+    funcs = 1:length(enumerate(BBOBFunction))
     
-    function runopt(op) 
-        println(string(op))
-        run_optimizer(op, run_lengths, Ntrials, dimensions, Δf)
-    end
 end
 
 optimizers = [
@@ -34,27 +38,18 @@ optimizers = [
     #BlackBoxOptimMethod(:resampling_memetic_search),#poor performance 
 ]
 
-#optimizers = [CMAESoptim] 
-
 opt_strings = map(string,optimizers)
 
 ## run benchmark
 
-mean_succ = zeros(length(optimizers),length(funcs),length(run_lengths),length(dimensions))
-mean_dist, mean_fmin = similar(mean_succ), similar(mean_succ)
+mean_succ, mean_dist, mean_fmin, runtime = BBOB.benchmark(
+    optimizers, funcs, run_lengths, Ntrials, dimensions, Δf,
+)
 
-runtime = zeros(length(optimizers),length(funcs))
-
-ops = [OptFun(optimizers[i],funcs[j]) for i=1:length(optimizers), j=1:length(funcs) ]
-out = pmap(runopt, ops)
-
-for i=1:length(optimizers), j=1:length(funcs)
-    mean_succ[i,j,:,:], mean_dist[i,j,:,:], mean_fmin[i,j,:,:], runtime[i,j] = out[i,j]
-end
 info("Done, saving data and making plots.")
 
 ## save output
-outdir = joinpath(Pkg.dir(),"BBOBFunctions","data")
+outdir = joinpath(Pkg.dir(),"BBOB","data")
 
 writedlm(joinpath(outdir,"mean_succ.txt"),mean_succ)
 writedlm(joinpath(outdir,"mean_dist.txt"),mean_dist)
@@ -62,7 +57,7 @@ writedlm(joinpath(outdir,"mean_fmin.txt"),mean_fmin)
 
 ## make plots
 
-outdir = joinpath(Pkg.dir(),"BBOBFunctions","data","plots")
+outdir = joinpath(Pkg.dir(),"BBOB","data","plots")
 cols = Colors.distinguishable_colors(size(mean_succ,1),colorant"red")
 
 #all together

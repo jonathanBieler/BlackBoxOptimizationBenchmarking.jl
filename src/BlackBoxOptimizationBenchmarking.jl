@@ -1,10 +1,10 @@
 __precompile__()
-module BBOBFunctions
+module BlackBoxOptimizationBenchmarking
 
     using Distributions, Memoize, Compat
 
-    import Base: enumerate, show
-    export show
+    import Base: enumerate, show, string
+    export show, BBOBFunction, enumerate
     
 ## Constants and Functions
 
@@ -83,6 +83,7 @@ module BBOBFunctions
     show(io::IO,f::BBOBFunction) =  print(io,f.name)
 
     test_x_opt(f::BBOBFunction) = begin info(f); @assert f(f.x_opt) ≈ f.f_opt end
+    
 
 ## helpers to define function
 
@@ -94,12 +95,12 @@ module BBOBFunctions
     end
 
     function enumerate(::Type{BBOBFunction})
-         n = names(BBOBFunctions,true)
-         v = map(x->getfield(BBOBFunctions,x),n)
+         n = names(BlackBoxOptimizationBenchmarking,true)
+         v = map(x->getfield(BlackBoxOptimizationBenchmarking,x),n)
          
-         out = BBOBFunctions.BBOBFunction[]
+         out = BBOBFunction[]
          for x in v 
-             typeof(x) <: BBOBFunctions.BBOBFunction && push!(out,x)
+             typeof(x) <: BBOBFunction && push!(out,x)
          end
          out
     end
@@ -115,7 +116,6 @@ module BBOBFunctions
             const $f_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)),2)))
         end)
     end
-    
     
 ## Functions
 
@@ -439,19 +439,17 @@ module BBOBFunctions
     
     @BBOBFunction("Schwefel Function",20)
 
-
 ## Tests
 
     map(test_x_opt,enumerate(BBOBFunction))
 
+## utilities 
     
-
-##
+    include("benchmark.jl")
 
     function run_benchmark()
-        include(joinpath(Pkg.dir(),"BBOBFunctions","src","run_benchmark.jl"))
+        include(joinpath(Pkg.dir(),"BlackBoxOptimizationBenchmarking","src","run_benchmark.jl"))
     end
-
 
     #x = [collect(linspace(-10,10,500)) collect(linspace(-10,10,500))]
     #

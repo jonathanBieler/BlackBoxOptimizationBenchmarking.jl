@@ -1,7 +1,4 @@
-using Gadfly
-
-using BlackBoxOptimizationBenchmarking
-const BBOB = BlackBoxOptimizationBenchmarking
+using Gadfly, BBOBFunctions
 
 ##
 
@@ -9,7 +6,7 @@ function plot_fun(f)
     r = 5
     
     c, n, nline = Geom.contour(levels=logspace(-6,10,40)), 800, 1000
-    if any(f .== [BBOB.F16,BBOB.F17,BBOB.F18,BBOB.F19])
+    if any(f .== [BBOBFunctions.F16,BBOBFunctions.F17,BBOBFunctions.F18,BBOBFunctions.F19])
         c, n, nline = Geom.contour(levels=logspace(-6,8,20)), 500, 1000
     end
 
@@ -30,6 +27,9 @@ function plot_fun(f)
         layer(x=x,y=[ f([xi,f.x_opt[2],f.x_opt[3]]) for xi in x]-f.f_opt, Geom.line),
         layer(x=x,y=[ f([f.x_opt[1],xi,f.x_opt[3]]) for xi in x]-f.f_opt, Geom.line,Theme(default_color=colorant"orange")),
         layer(x=x,y=[ f([f.x_opt[1],f.x_opt[2],xi]) for xi in x]-f.f_opt, Geom.line,Theme(default_color=colorant"red")),
+#        layer(x=[f.x_opt[1]],y=[f([f.x_opt[1],0,0])]-f.f_opt,Geom.point),
+#        layer(x=[f.x_opt[2]],y=[f([0,f.x_opt[2],0])]-f.f_opt,Geom.point,Theme(default_color=colorant"orange")),
+#        layer(x=x,y=[f([xi,xi,xi]) for xi in x]-f.f_opt,Geom.line,Theme(default_color=colorant"red")),
         Coord.cartesian(xmin=-r,xmax=r),
         Guide.title(string(f)),
         Scale.y_log10
@@ -37,11 +37,11 @@ function plot_fun(f)
     p1,p2
 end
 
-outdir = joinpath(Pkg.dir(),"BBOB","data","plots","functions")
+outdir = joinpath(Pkg.dir(),"BBOBFunctions","data","plots","functions")
 
-for i in 20:length(enumerate(BBOB.BBOBFunction))
+for i in 20:length(enumerate(BBOBFunctions.BBOBFunction))
     
-    f = getfield(BBOB,Symbol("F$i"))    
+    f = getfield(BBOBFunctions,Symbol("F$i"))    
     info(f)
     p1,p2 = plot_fun(f)
 

@@ -14,13 +14,13 @@ A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.
 
 ### Functions
 
-Functions can be accessed as `BBOBFunctions.F1`, which returns a `BBOBFunction` with fields `f` containing the function itself, `f_opt` its minimal value, and `x_opt` its minimizer, i.e. `f(x_opt) = f_opt`.
+Functions can be accessed as `BlackBoxOptimizationBenchmarking.F1`, which returns a `BBOBFunction` with fields `f` containing the function itself, `f_opt` its minimal value, and `x_opt` its minimizer, i.e. `f(x_opt) = f_opt`.
 
 Functions can be listed using `enumerate`:
 
 ```julia
-julia> enumerate(BBOBFunctions.BBOBFunction)
-20-element Array{BBOBFunctions.BBOBFunction,1}:
+julia> enumerate(BBOBFunction)
+20-element Array{BlackBoxOptimizationBenchmarking.BBOBFunction,1}:
  Sphere                                           
  Ellipsoidal Function                             
  Discus Function                                  
@@ -41,7 +41,15 @@ julia> enumerate(BBOBFunctions.BBOBFunction)
  Step Ellipsoidal Function                        
  Rosenbrock Function, original                    
  Rosenbrock Function, rotated
- ```                    
+ ```
+ 
+A benchmark for a single optimizer and function can be run with:
+
+```julia
+    benchmark(optimizer::Any, f::BBOBFunction, run_lengths, Ntrials, dimensions, Δf)
+```
+
+See tests/runtests.jl                  
 
 ### Reference:
 
