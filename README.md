@@ -46,10 +46,20 @@ julia> enumerate(BBOBFunction)
 A benchmark for a single optimizer and function can be run with:
 
 ```julia
-    benchmark(optimizer::Any, f::BBOBFunction, run_lengths, Ntrials, dimensions, Δf)
+benchmark(optimizer::Any, f::BBOBFunction, run_lengths, Ntrials, dimensions, Δf)
 ```
 
-See tests/runtests.jl                  
+Or for a collection of optimizers with:
+
+```julia
+benchmark(optimizers::Vector{T}, funcs, run_lengths, Ntrials, dimensions, Δf)
+```
+
+See [test/runtests.jl](test/runtests.jl)         
+
+The optimizer must implement the methods `optimize`, `minimum` and `minimizer`, see
+
+[scripts/optimizers_interface.jl](scripts/optimizers_interface.jl)
 
 ### Reference:
 
