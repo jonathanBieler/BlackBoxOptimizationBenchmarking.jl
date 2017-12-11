@@ -1,23 +1,30 @@
-using BlackBoxOptimizationBenchmarking
 using Base.Test
 
-const BBOB = BlackBoxOptimizationBenchmarking
+# benchmark uses several workers if available
+@everywhere begin
 
-include("../scripts/optimizers_interface.jl")
+    using BlackBoxOptimizationBenchmarking, Optim
+    import BlackBoxOptimizationBenchmarking: minimizer, minimum, optimize
+    const BBOB = BlackBoxOptimizationBenchmarking
+    
+    #interface for Optim
+    pinit(D) = 10*rand(D)-5
+    optimize(opt::Optim.Optimizer,f,D,run_length) =
+        Optim.optimize(f, pinit(D), opt, Optim.Options(f_calls_limit=run_length,g_tol=1e-12))
+        
+    minimum(mfit::Optim.OptimizationResults) = mfit.minimum
+    minimizer(mfit::Optim.OptimizationResults) = mfit.minimizer
+
+    string(opt::Optim.Optimizer) = string(typeof(opt).name)
+end
 
 b = BBOB.benchmark(
-    NelderMead(), BlackBoxOptimizationBenchmarking.F1, [100,500,1000], 20, 2, 1e-6,
+    NelderMead(), BBOB.F1, [100,500,1000], 20, 2, 1e-6,
 )
 
 b = BBOB.benchmark(
     NelderMead(), 1, [100,500,1000], 20, 2, 1e-6,
 )
-
-
-@everywhere begin
-    using BlackBoxOptimizationBenchmarking
-    include(joinpath(Pkg.dir(),"BlackBoxOptimizationBenchmarking/scripts/optimizers_interface.jl"))
-end
 
 b = BBOB.benchmark(
     [NelderMead(), GradientDescent()], [1, 2], [100,500,1000], 20, 2, 1e-6,

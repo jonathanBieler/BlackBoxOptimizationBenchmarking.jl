@@ -40,7 +40,7 @@ minimizer(mfit::Tuple{NLoptOptimMethod,Array{Float64,1},Float64}) = mfit[2]
 ## Optim
 
     optimize(opt::Optim.Optimizer,f,D,run_length) =
-        Optim.optimize(f, pinit(D), NelderMead(), Optim.Options(f_calls_limit=run_length,g_tol=1e-12))
+        Optim.optimize(f, pinit(D), opt, Optim.Options(f_calls_limit=run_length,g_tol=1e-12))
         
     minimum(mfit::Optim.OptimizationResults) = mfit.minimum
     minimizer(mfit::Optim.OptimizationResults) = mfit.minimizer
