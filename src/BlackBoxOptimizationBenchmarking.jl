@@ -10,9 +10,9 @@ module BlackBoxOptimizationBenchmarking
 
     const maximum_dimension = 100
 
-    T_asy(x::Array{Float64,1},β) = [x[i] > 0 ? x[i]^(1+β*(i-1)/(length(x)-1)*√x[i]) : x[i] for i=1:length(x)]
+    T_asy(x::Vector{T},β) where T <: Number = [x[i] > 0 ? x[i]^(1+β*(i-1)/(length(x)-1)*√x[i]) : x[i] for i=1:length(x)]
 
-    function T_asy(x::Array{Float64,2},β) 
+    function T_asy(x::Matrix{T},β) where T <: Number 
         z = similar(x)
         for i=1:size(x,1)
             z[i,:] = T_asy(x[i,:],β)
@@ -20,15 +20,15 @@ module BlackBoxOptimizationBenchmarking
         z
     end
     
-    function T_osz(xi::Float64)
-        xhat = xi != 0 ? log(abs(xi)) : 0.
+    function T_osz(xi::T) where T <: Number 
+        xhat = xi != zero(T) ? log(abs(xi)) : zero(T)
         c1 = xi > 0 ? 10. : 5.5
         c2 = xi > 0 ? 7.9 : 3.1
 
         sign(xi) * exp(xhat + 0.049*(sin(c1*xhat)+sin(c2*xhat) ))
     end
 
-    function T_osz(x::Array{Float64,1})
+    function T_osz(x::Vector{T}) where T <: Number 
         z = similar(x)
         for i=1:length(x)
             z[i] = T_osz(x[i])
@@ -36,7 +36,7 @@ module BlackBoxOptimizationBenchmarking
         z
     end
 
-    function T_osz(x::Array{Float64,2})
+    function T_osz(x::Matrix{T}) where T <: Number 
         z = similar(x)
         for i=1:size(x,1)
             z[i,:] = T_osz(x[i,:])
