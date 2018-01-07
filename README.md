@@ -6,11 +6,25 @@ A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.
 
 ### Benchmark results
 
-![benchmark](./data/plots/mean_succ.svg)
+The average sucess rate (meaning the optimizer reached the minimum + 1e-6): 
 
-![benchmark](./data/plots/mean_fmin.svg)
+![benchmark](./data/plots/mean_succ.png)
 
-![benchmark](./data/plots/runtime.svg)
+Python [CMA-ES](https://pypi.python.org/pypi/cma) is the best overall, 
+while some of [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) optimizers
+get better for large numbers of function evaluation.
+
+#### The average sucess rate across the dimension of the function: 
+
+![benchmark](./data/plots/per_dimension/mean_succ_3.png)
+
+![benchmark](./data/plots/per_dimension/mean_succ_6.png)
+
+![benchmark](./data/plots/per_dimension/mean_succ_15.png)
+
+#### The total relative run time of each optimizer
+
+![benchmark](./data/plots/runtime.png)
 
 ### Functions
 

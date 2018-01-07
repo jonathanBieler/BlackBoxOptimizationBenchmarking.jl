@@ -1,6 +1,7 @@
-using Optim, BlackBoxOptim, NLopt
+using Optim, BlackBoxOptim, NLopt, PyCall
 
 import BlackBoxOptimizationBenchmarking: minimizer, minimum, optimize
+import Base.string
 
 # Define optimize, minimum and minimizer for each optimizer
 
@@ -25,6 +26,41 @@ minimizer(mfit::Tuple{NLoptOptimMethod,Array{Float64,1},Float64}) = mfit[2]
 #min_objective!(opt,(p,g)->BBOBFunctions.F1.f(p))
 #maxeval!(opt,1000)
 #minf,minx,ret = NLopt.optimize(opt, pinit(D))
+
+## python cma
+
+    @pyimport cma
+    
+    struct PyCMA
+    end
+
+    function optimize(m::PyCMA,f,D,run_length) 
+        es = cma.CMAEvolutionStrategy(pinit(D), 1, Dict("verb_disp"=>0,"maxiter"=>run_length))
+        mfit = es[:optimize](f)[:result]
+        (mfit[1],mfit[2])
+    end
+
+    string(m::PyCMA) = "PyCMA"
+  
+## scipy
+
+    @pyimport scipy.optimize as scipy_opt
+
+    struct PyMinimize
+        method::String
+    end
+
+    optimize(m::PyMinimize,f,D,run_length) = scipy_opt.minimize(
+        f, pinit(D),method=m.method,
+        options = Dict(
+            "maxfev"=>run_length,"xatol"=>1e-8,"fatol"=>1e-8,
+            "maxiter"=>run_length,"gtol"=>1e-12,
+        )
+    )
+    minimum(mfit::Dict{Any,Any}) = mfit["fun"]
+    minimizer(mfit::Dict{Any,Any}) = mfit["x"]
+    
+    string(m::PyMinimize) = string("Py.",m.method)
 
 ## my cmaes
 
