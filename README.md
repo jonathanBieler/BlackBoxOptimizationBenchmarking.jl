@@ -10,9 +10,9 @@ The average sucess rate (meaning the optimizer reached the minimum + 1e-6):
 
 ![benchmark](./data/plots/mean_succ.png)
 
-Python [CMA-ES](https://pypi.python.org/pypi/cma) is the best overall, 
+Python [CMA-ES](https://pypi.python.org/pypi/cma) is the best overall (mainly in higher dimension), 
 while some of [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) optimizers
-get better for large numbers of function evaluation.
+are better for large numbers of function evaluation.
 
 #### The average sucess rate across the dimension of the function: 
 
