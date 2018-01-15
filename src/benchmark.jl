@@ -13,7 +13,7 @@ function benchmark(op::OptFun, run_lengths, Ntrials, dimensions, Δf)
 
     f = enumerate(BBOBFunction)[op.fun_idx]
     optimizer = op.opt
-    info("$(optimizer)\t $f")
+    info("$(string(optimizer))\t $f")
 
     reached_minium = zeros(Bool,Ntrials,length(run_lengths),length(dimensions))
     distance_to_xopt = zeros(Ntrials,length(run_lengths),length(dimensions))

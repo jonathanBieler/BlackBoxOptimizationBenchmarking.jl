@@ -3,7 +3,7 @@ using Gadfly
     
 ##
 
-run_bench = false
+run_bench = true
 
 #addprocs(2)
 
@@ -16,10 +16,10 @@ run_bench = false
     include(joinpath(Pkg.dir(),"BlackBoxOptimizationBenchmarking/scripts/optimizers_interface.jl"))
 
     dimensions = [3 6 15]
-    Ntrials = 6
+    Ntrials = 10
     Δf = 1e-6
 #    run_lengths = round.(Int,linspace(20,60_000,20))
-    run_lengths = round.(Int,linspace(20,25_000,10))
+    run_lengths = round.(Int,linspace(20,30_000,15))
     funcs = 1:length(enumerate(BBOBFunction))
     
 end
@@ -30,9 +30,9 @@ optimizers = [
     NelderMead(), 
     BlackBoxOptimMethod(:adaptive_de_rand_1_bin_radiuslimited),
     BlackBoxOptimMethod(:adaptive_de_rand_1_bin),
-    #NLoptOptimMethod(:LN_BOBYQA), # fails too
-    #NLoptOptimMethod(:LN_PRAXIS), #this guy often fails
-    #NLoptOptimMethod(:LN_SBPLX), # this guy segfault
+    Chain(NLoptOptimMethod(:GN_ISRES),NelderMead(),0.9),
+    Chain(NLoptOptimMethod(:GN_ESCH), NelderMead(),0.9),
+    Chain(NLoptOptimMethod(:GD_STOGO),NelderMead(),0.9),
     BlackBoxOptimMethod(:xnes),
     BlackBoxOptimMethod(:generating_set_search),
     BlackBoxOptimMethod(:de_rand_2_bin),

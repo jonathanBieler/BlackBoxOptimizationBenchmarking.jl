@@ -16,6 +16,12 @@ function optimize(NLmeth::NLoptOptimMethod,f,D,run_length)
     opt = Opt(NLmeth.s, D)
     min_objective!(opt, (p,g) -> f(p) ) #NLopt expect gradient
     maxeval!(opt,run_length)
+    xtol_abs!(opt,1e-12)
+    xtol_rel!(opt,1e-12)
+    ftol_abs!(opt,1e-12)
+    ftol_rel!(opt,1e-12)
+    lower_bounds!(opt, -5*ones(D))
+    upper_bounds!(opt, +5*ones(D))
     minf,minx,ret = NLopt.optimize(opt, pinit(D))
     return NLmeth, minx, minf
 end
@@ -27,7 +33,28 @@ minimizer(mfit::Tuple{NLoptOptimMethod,Array{Float64,1},Float64}) = mfit[2]
 #maxeval!(opt,1000)
 #minf,minx,ret = NLopt.optimize(opt, pinit(D))
 
+## chain
+
+    type Chain{T,K}
+        first::T
+        second::K
+        p::Float64
+    end
+    
+    function optimize(m::Chain,f,D,run_length) 
+        rl1 = round(Int,m.p*run_length)
+        rl2 = run_length - rl1
+        
+        _,xinit,_ = optimize(m.first,f,D,run_length)
+        mfit = optimize(m.second,f,D,run_length, xinit) 
+    end
+    
+    string(m::Chain) = string(string(m.first)," → ", string(m.second))
+    
+
 ## python cma
+
+#try
 
     @pyimport cma
     
@@ -61,27 +88,33 @@ minimizer(mfit::Tuple{NLoptOptimMethod,Array{Float64,1},Float64}) = mfit[2]
     minimizer(mfit::Dict{Any,Any}) = mfit["x"]
     
     string(m::PyMinimize) = string("Py.",m.method)
+    
+#end
 
 ## my cmaes
 
-    include("cmaes.jl")
+    include("cmaes2.jl")
     using CMAES
 
     type CMAESoptim end
-
-    optimize(::Type{CMAESoptim},f,D,run_length) = CMAES.cmaes(f, pinit(D), 3.0, run_length, round(Int, 3 + floor(3log(D))))
+    
+    optimize(::Type{CMAESoptim},f,D,run_length) = CMAES.cmaes(f, pinit(D), 3.0, run_length, 24)
     minimum(mfit::Tuple{Array{Float64,1},Float64}) = mfit[2]
     minimizer(mfit::Tuple{Array{Float64,1},Float64}) = mfit[1]
-
+    
+    
 ## Optim
 
-    optimize(opt::Optim.Optimizer,f,D,run_length) =
+    optimize(opt::Optim.AbstractOptimizer,f,D,run_length) =
         Optim.optimize(f, pinit(D), opt, Optim.Options(f_calls_limit=run_length,g_tol=1e-12))
+                
+    optimize(opt::Optim.AbstractOptimizer,f,D,run_length,xinit) =
+        Optim.optimize(f, xinit, opt, Optim.Options(f_calls_limit=run_length,g_tol=1e-12))
         
     minimum(mfit::Optim.OptimizationResults) = mfit.minimum
     minimizer(mfit::Optim.OptimizationResults) = mfit.minimizer
 
-    string(opt::Optim.Optimizer) = string(typeof(opt).name)
+    string(opt::Optim.AbstractOptimizer) = string(typeof(opt).name)
 
     # Optim with restart
     try 
