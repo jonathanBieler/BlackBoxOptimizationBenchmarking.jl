@@ -82,7 +82,7 @@ module BlackBoxOptimizationBenchmarking
     (f::BBOBFunction)(x) = f.f(x)
     show(io::IO,f::BBOBFunction) =  print(io,f.name)
 
-    test_x_opt(f::BBOBFunction) = begin info(f); @assert f(f.x_opt) ≈ f.f_opt end
+    test_x_opt(f::BBOBFunction) = begin @assert f(f.x_opt) ≈ f.f_opt end #info(f); 
     
 
 ## helpers to define function

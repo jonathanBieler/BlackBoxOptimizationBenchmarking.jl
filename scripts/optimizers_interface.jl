@@ -93,12 +93,15 @@ minimizer(mfit::Tuple{NLoptOptimMethod,Array{Float64,1},Float64}) = mfit[2]
 
 ## my cmaes
 
-    include("cmaes2.jl")
     using CMAES
 
     type CMAESoptim end
     
-    optimize(::Type{CMAESoptim},f,D,run_length) = CMAES.cmaes(f, pinit(D), 3.0, run_length, 24)
+    optimize(::Type{CMAESoptim},f,D,run_length) =  optimize(
+        f,pinit(D),CMAES.CMA(16,3),
+        Optim.Options(iterations=run_length),
+    )
+    
     minimum(mfit::Tuple{Array{Float64,1},Float64}) = mfit[2]
     minimizer(mfit::Tuple{Array{Float64,1},Float64}) = mfit[1]
     
