@@ -20,11 +20,13 @@ are better for large numbers of function evaluation.
 
 ![benchmark](./data/plots/per_dimension/mean_succ_6.png)
 
-![benchmark](./data/plots/per_dimension/mean_succ_15.png)
+![benchmark](./data/plots/per_dimension/mean_succ_16.png)
 
 #### The total relative run time of each optimizer
 
 ![benchmark](./data/plots/runtime.png)
+
+Note that the Python algorithm are called from Julia, which might cause some overhead.
 
 ### Functions
 

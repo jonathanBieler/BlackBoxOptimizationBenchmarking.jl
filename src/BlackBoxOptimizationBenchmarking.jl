@@ -1,7 +1,7 @@
 __precompile__()
 module BlackBoxOptimizationBenchmarking
 
-    using Distributions, Memoize, Compat
+    using Distributions, Memoize, Compat, Optim
 
     import Base: enumerate, show, string
     export show, BBOBFunction, enumerate

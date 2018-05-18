@@ -1,6 +1,6 @@
 ##
 
-import Optim: minimizer, minimum, optimize
+import Optim: minimizer, optimize, minimum
 
 type OptFun
     opt
@@ -60,8 +60,7 @@ function benchmark(optimizers::Vector{T}, funcs, run_lengths, Ntrials, dimension
     mean_dist, mean_fmin = similar(mean_succ), similar(mean_succ)
     runtime = zeros(length(optimizers),length(funcs))
     
-    ops = [OptFun(optimizers[i],funcs[j]) for i=1:length(optimizers), j=1:length(funcs) ]
-    
+    ops = [OptFun(optimizers[i],funcs[j]) for i=1:length(optimizers), j=1:length(funcs)]
     
     out = pmap(op->benchmark(op, run_lengths, Ntrials, dimensions, Δf), ops)
     

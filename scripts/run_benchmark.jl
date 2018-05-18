@@ -1,6 +1,4 @@
 using Gadfly
-
-    
 ##
 
 run_bench = true
@@ -15,19 +13,19 @@ run_bench = true
     const BBOB = BlackBoxOptimizationBenchmarking
     include(joinpath(Pkg.dir(),"BlackBoxOptimizationBenchmarking/scripts/optimizers_interface.jl"))
 
-    dimensions = [3 6 15]
+    dimensions = [3 6 16]
     Ntrials = 10
     Δf = 1e-6
-#    run_lengths = round.(Int,linspace(20,60_000,20))
     run_lengths = round.(Int,linspace(20,30_000,15))
+    #run_lengths = round.(Int,linspace(20,20_000,15))
     funcs = 1:length(enumerate(BBOBFunction))
     
 end
 
 optimizers = [
     OptimRestart(NelderMead()),
-#    CMAESoptim,
     NelderMead(), 
+    SimulatedAnnealing(),
     BlackBoxOptimMethod(:adaptive_de_rand_1_bin_radiuslimited),
     BlackBoxOptimMethod(:adaptive_de_rand_1_bin),
     Chain(NLoptOptimMethod(:GN_ISRES),NelderMead(),0.9),
@@ -120,12 +118,12 @@ end
 
 ## f min
 
-idx = sortperm([exp(mean(log(mean_fmin[i,:,end,:]+eps()))) for i=1:length(optimizers)],rev=true)
+idx = sortperm([exp(mean(log.(mean_fmin[i,:,end,:]+eps()))) for i=1:length(optimizers)],rev=true)
 
 # all together
 p = plot(
     [layer(
-        x=collect(run_lengths),y=exp(mean(log(mean_fmin[i,:,:,:]+eps()),(1,3))),Geom.line,
+        x=collect(run_lengths),y=exp.(mean(log.(mean_fmin[i,:,:,:]+eps()),(1,3))),Geom.line,
         Theme(default_color=cols[i],line_width=2pt)
     ) 
     for i in 1:size(mean_succ,1)]...,
@@ -142,11 +140,11 @@ draw(PNG(joinpath(outdir,"mean_fmin.png"),dpi=150,16cm,10cm),p)
 
 for (k,D) in zip(1:length(dimensions), dimensions)
 
-    idx = sortperm([exp(mean(log(mean_fmin[i,:,end,k]+eps()))) for i=1:length(optimizers)],rev=true)
+    idx = sortperm([exp.(mean(log.(mean_fmin[i,:,end,k]+eps()))) for i=1:length(optimizers)],rev=true)
 
     p = plot(
         [layer(
-            x=collect(run_lengths)/D,y=exp(mean(log(mean_fmin[i,:,:,k]+eps()),1)),Geom.line,
+            x=collect(run_lengths)/D,y=exp(mean(log.(mean_fmin[i,:,:,k]+eps()),1)),Geom.line,
             Theme(default_color=cols[i],line_width=2pt)
         ) for i in 1:size(mean_succ,1)]...,
         layer(yintercept=[Δf],Geom.hline,Theme(default_color=colorant"gray")),

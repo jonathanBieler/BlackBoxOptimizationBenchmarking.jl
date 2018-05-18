@@ -12,9 +12,6 @@ using Base.Test
     optimize(opt::Optim.AbstractOptimizer,f,D,run_length) =
         Optim.optimize(f, pinit(D), opt, Optim.Options(f_calls_limit=run_length,g_tol=1e-12))
         
-    minimum(mfit::Optim.OptimizationResults) = mfit.minimum
-    minimizer(mfit::Optim.OptimizationResults) = mfit.minimizer
-
     string(opt::Optim.AbstractOptimizer) = string(typeof(opt).name)
 end
 
@@ -29,4 +26,3 @@ b = BBOB.benchmark(
 b = BBOB.benchmark(
     [NelderMead(), GradientDescent()], [1, 2], [100,500,1000], 20, 2, 1e-6,
 )
-
