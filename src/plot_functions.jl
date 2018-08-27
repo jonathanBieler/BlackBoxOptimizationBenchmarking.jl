@@ -8,15 +8,15 @@ const BBOB = BlackBoxOptimizationBenchmarking
 function plot_fun(f)
     r = 5
     
-    c, n, nline = Geom.contour(levels=logspace(-6,10,40)), 800, 1000
+    c, n, nline = Geom.contour(levels=exp10.(range(-6, stop=10, length=40))), 800, 1000
     if any(f .== [BBOB.F16,BBOB.F17,BBOB.F18,BBOB.F19])
-        c, n, nline = Geom.contour(levels=logspace(-6,8,20)), 500, 1000
+        c, n, nline = Geom.contour(levels=exp10.(range(-6, stop=8, length=20))), 500, 1000
     end
 
     p1 = plot(
         layer(x=[f.x_opt[1]],y=[f.x_opt[2]],Geom.point,Theme(default_color=colorant"red")),
         layer(
-            z=(x,y)->f([x,y])-f.f_opt, x=linspace(-r,r,n), y=linspace(-r,r,n), 
+            z=(x,y)->f([x,y])-f.f_opt, x=range(-r, stop=r, length=n), y=range(-r, stop=r, length=n), 
             c,
         ),
         Coord.cartesian(xmin=-r,xmax=r,ymin=-r,ymax=r),
@@ -24,7 +24,7 @@ function plot_fun(f)
     )
     
     # line plot
-    x = collect(linspace(-r,r,nline))
+    x = collect(range(-r, stop=r, length=nline))
     
     p2 = plot(
         layer(x=x,y=[ f([xi,f.x_opt[2],f.x_opt[3]]) for xi in x]-f.f_opt, Geom.line),

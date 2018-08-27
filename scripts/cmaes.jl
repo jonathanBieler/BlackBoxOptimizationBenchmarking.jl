@@ -5,7 +5,7 @@ module CMAES
 
 using Distributions, Compat, PDMats
 
-@compat weights(μ) = normalize!([ (log.(μ+1) - log(i)) / (μ*log.(μ+1) -sum(log.(1:μ)) ) for i =1:μ],1)
+weights(μ) = normalize!([ (log.(μ+1) - log(i)) / (μ*log.(μ+1) -sum(log.(1:μ)) ) for i =1:μ],1)
 
 function average_x!(out::Vector{T},x::Matrix{T},w::Vector{T},μ) where {T <:Number} 
     fill!(out,0)

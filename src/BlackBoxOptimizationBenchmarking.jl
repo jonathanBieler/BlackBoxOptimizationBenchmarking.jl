@@ -1,4 +1,3 @@
-__precompile__()
 module BlackBoxOptimizationBenchmarking
 
     using Distributions, Memoize, Compat, Optim
@@ -56,7 +55,7 @@ module BlackBoxOptimizationBenchmarking
     
     f_pen(x) =  sum(max(0,abs(xi)-5)^2 for xi in x)
     
-    @compat const one_pm = sign.(randn(maximum_dimension))
+    const one_pm = sign.(randn(maximum_dimension))
     
     #rotation matrices (probably a bit wrong)
     @memoize function Q(D)
@@ -72,7 +71,7 @@ module BlackBoxOptimizationBenchmarking
 
 ## BBOBFunction
 
-    type BBOBFunction{F<:Function}
+    mutable struct BBOBFunction{F<:Function}
         name::String
         f::F
         x_opt::Array{Float64,1}
@@ -87,7 +86,7 @@ module BlackBoxOptimizationBenchmarking
 
 ## helpers to define function
 
-    fun_symbols(n) = (map(Symbol, ["F$(n)", "f$(n)", "x$(n)_opt", "f$(n)_opt"])...)
+    fun_symbols(n) = (map(Symbol, ["F$(n)", "f$(n)", "x$(n)_opt", "f$(n)_opt"])...,)
 
     macro BBOBFunction(name,n)
         F,f,x_opt,f_opt = fun_symbols(n)
@@ -95,7 +94,7 @@ module BlackBoxOptimizationBenchmarking
     end
 
     function enumerate(::Type{BBOBFunction})
-         n = names(BlackBoxOptimizationBenchmarking,true)
+         n = names(BlackBoxOptimizationBenchmarking, all=true)
          v = map(x->getfield(BlackBoxOptimizationBenchmarking,x),n)
          
          out = BBOBFunction[]
@@ -113,7 +112,7 @@ module BlackBoxOptimizationBenchmarking
         F,f,x_opt,f_opt = fun_symbols(n)
         esc(quote
             const $x_opt = rand(Uniform(-4,4),maximum_dimension)
-            const $f_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)),2)))
+            const $f_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)), digits=2)))
         end)
     end
     
@@ -176,7 +175,7 @@ module BlackBoxOptimizationBenchmarking
     ## f5, Linear Slope
     
     const x5_opt = 5*one_pm
-    const f5_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)),2)))
+    const f5_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)), digits=2)))
 
     """ Linear Slope """
     function f5(x) 
@@ -423,7 +422,7 @@ module BlackBoxOptimizationBenchmarking
     # https://github.com/numbbo/coco/issues/837
 
     const x20_opt = 4.2096874633/2 * one_pm
-    const f20_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)),2)))
+    const f20_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)), digits=2)))
     
     """ Schwefel Function """
     function f20(x)
