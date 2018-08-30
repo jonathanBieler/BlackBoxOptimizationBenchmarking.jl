@@ -7,7 +7,7 @@ import Base.string
 
 ## NLopt
 
-    type NLoptOptimMethod 
+    mutable struct NLoptOptimMethod 
         s::Symbol
     end
     string(opt::NLoptOptimMethod) = string("NLopt.",opt.s)
@@ -30,7 +30,7 @@ import Base.string
 
 ## chain
 
-    type Chain{T,K}
+    mutable struct Chain{T,K}
         first::T
         second::K
         p::Float64
@@ -100,22 +100,23 @@ import Base.string
 
     # Optim with restart
     try 
-        type OptimRestart{T}
+        mutable struct OptimRestart{T}
             opt::T
         end
+    catch
     end
 
     function optimize(opt::OptimRestart,f,D,run_length) 
         fits = [optimize(opt.opt,f,D,round(Int,run_length/20)) for i=1:20]
         mins = [minimum(fit) for fit in fits]
-        fits[indmin(mins)]
+        fits[argmin(mins)]
     end
 
     string(opt::OptimRestart) = string("R-",string(opt.opt))
 
 ## BlackBoxOptim
 
-    type BlackBoxOptimMethod 
+    mutable struct BlackBoxOptimMethod 
         s::Symbol
     end
     string(opt::BlackBoxOptimMethod) = string("BBO.",opt.s)

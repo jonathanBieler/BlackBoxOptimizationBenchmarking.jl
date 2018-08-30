@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 
 # benchmark uses several workers if available
 @everywhere begin

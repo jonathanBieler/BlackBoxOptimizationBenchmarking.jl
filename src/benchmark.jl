@@ -2,7 +2,7 @@
 
 import Optim: minimizer, optimize, minimum
 
-type OptFun
+mutable struct OptFun
     opt
     fun_idx::Int
 end

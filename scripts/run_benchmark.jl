@@ -49,7 +49,7 @@ if run_bench
         optimizers, funcs, run_lengths, Ntrials, dimensions, Δf,
     )
 
-    info("Done, saving data and making plots.")
+    @info("Done, saving data and making plots.")
 
     # save output
 
