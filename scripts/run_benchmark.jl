@@ -1,4 +1,5 @@
 using Gadfly
+using Distributed
 ##
 
 run_bench = true

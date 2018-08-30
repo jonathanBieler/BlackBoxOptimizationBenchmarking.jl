@@ -1,4 +1,4 @@
-using Test
+using Test, Distributed
 
 # benchmark uses several workers if available
 @everywhere begin
@@ -8,7 +8,7 @@ using Test
     const BBOB = BlackBoxOptimizationBenchmarking
     
     #interface for Optim
-    pinit(D) = 10*rand(D)-5
+    pinit(D) = 10*rand(D).-5
     optimize(opt::Optim.AbstractOptimizer,f,D,run_length) =
         Optim.optimize(f, pinit(D), opt, Optim.Options(f_calls_limit=run_length,g_tol=1e-12))
         

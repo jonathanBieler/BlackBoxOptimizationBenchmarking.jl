@@ -1,5 +1,4 @@
 ##
-
 import Optim: minimizer, optimize, minimum
 
 mutable struct OptFun
@@ -13,7 +12,7 @@ function benchmark(op::OptFun, run_lengths, Ntrials, dimensions, Δf)
 
     f = enumerate(BBOBFunction)[op.fun_idx]
     optimizer = op.opt
-    info("$(string(optimizer))\t $f")
+    @info("$(string(optimizer))\t $f")
 
     reached_minium = zeros(Bool,Ntrials,length(run_lengths),length(dimensions))
     distance_to_xopt = zeros(Ntrials,length(run_lengths),length(dimensions))
@@ -30,18 +29,18 @@ function benchmark(op::OptFun, run_lengths, Ntrials, dimensions, Δf)
             distance_to_xopt[i,j,k] =  √sum(abs2.(minimizer(mfit) - f.x_opt[1:D]))
             
         catch err
-            warn(err)
+            @warn(err)
             
             reached_minium[i,j,k] = false
             fmin[i,j,k] = NaN
             distance_to_xopt[i,j,k] = NaN
-            warn(string(optimizer, " failed :", err))
+            @warn(string(optimizer, " failed :", err))
         end
 
     end
     t /= Ntrials*length(run_lengths)*length(dimensions)
     
-    mean(reached_minium,1), mean(distance_to_xopt,1), mean(fmin,1), t
+    mean(reached_minium,dims=1), mean(distance_to_xopt,dims=1), mean(fmin,dims=1), t
 end
 
 benchmark(optimizer::Any, f::BBOBFunction, run_lengths, Ntrials, dimensions, Δf) = benchmark(

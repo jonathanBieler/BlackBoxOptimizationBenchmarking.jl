@@ -1,6 +1,7 @@
 module BlackBoxOptimizationBenchmarking
 
     using Distributions, Memoize, Compat, Optim
+    using LinearAlgebra, Distributed
 
     import Base: enumerate, show, string
     export show, BBOBFunction, enumerate
@@ -71,7 +72,7 @@ module BlackBoxOptimizationBenchmarking
 
 ## BBOBFunction
 
-    mutable struct BBOBFunction{F<:Function}
+    struct BBOBFunction{F<:Function}
         name::String
         f::F
         x_opt::Array{Float64,1}
@@ -80,10 +81,10 @@ module BlackBoxOptimizationBenchmarking
 
     (f::BBOBFunction)(x) = f.f(x)
     show(io::IO,f::BBOBFunction) =  print(io,f.name)
+    Base.broadcastable(f::BBOBFunction) = Ref(f)
 
-    test_x_opt(f::BBOBFunction) = begin @assert f(f.x_opt) ≈ f.f_opt end #info(f); 
+    test_x_opt(f::BBOBFunction) = @assert f(f.x_opt) ≈ f.f_opt
     
-
 ## helpers to define function
 
     fun_symbols(n) = (map(Symbol, ["F$(n)", "f$(n)", "x$(n)_opt", "f$(n)_opt"])...,)
@@ -237,7 +238,7 @@ module BlackBoxOptimizationBenchmarking
     function f8(x) 
         D = length(x)
         
-        z = max(1,√D/8)*(x - x8_opt[1:D]) + 1
+        z = max(1,√D/8)*(x - x8_opt[1:D]) .+ 1
         
         ∑( 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1 ) + f8_opt
     end
@@ -252,7 +253,7 @@ module BlackBoxOptimizationBenchmarking
     function f9(x) 
         D = length(x)
         
-        z = max(1,√D/8)*R(D)*(x - x9_opt[1:D]) + 1
+        z = max(1,√D/8)*R(D)*(x - x9_opt[1:D]) .+ 1
         
         ∑( 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1 ) + f9_opt
     end
@@ -409,7 +410,7 @@ module BlackBoxOptimizationBenchmarking
     function f19(x)
         D = length(x)
 
-        z = max(1,√D/8)*R(D)*(x - x19_opt[1:D]) + 1
+        z = max(1,√D/8)*R(D)*(x - x19_opt[1:D]) .+ 1
         s = [ 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1]
         
         10/(D-1)*∑( s[i]/4000 -cos(s[i]) for i=1:D-1 ) + 10 + f19_opt
