@@ -26,4 +26,4 @@ matrix:
 notifications:
     email: false
 after_success:
-    - julia -e 'using Pkg; cd(Pkg.dir("Cairo")); Pkg.add("BlackBoxOptimizationBenchmarking"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+    - julia -e 'using Pkg; cd(Pkg.dir("BlackBoxOptimizationBenchmarking")); Pkg.add("BlackBoxOptimizationBenchmarking"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
