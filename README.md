@@ -7,13 +7,11 @@ A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.
 
 ### Benchmark results
 
-The average sucess rate (meaning the optimizer reached the minimum + 1e-6): 
+The average sucess rate (meaning the optimizer reached the minimum + 1e-6) in function of the number of objective function evaluations : 
 
 ![benchmark](./data/plots/mean_succ.png)
 
-Python [CMA-ES](https://pypi.python.org/pypi/cma) is the best overall (mainly in higher dimension), 
-while some of [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) optimizers
-are better for large numbers of function evaluation.
+Since some global optimizers have poor final convergence, they were chained into a Nelder-Mead using 10% of the objective function evaluation budget.
 
 #### The average sucess rate across the dimension of the function: 
 
@@ -21,13 +19,13 @@ are better for large numbers of function evaluation.
 
 ![benchmark](./data/plots/per_dimension/mean_succ_6.png)
 
-![benchmark](./data/plots/per_dimension/mean_succ_16.png)
+![benchmark](./data/plots/per_dimension/mean_succ_12.png)
 
 #### The total relative run time of each optimizer
 
 ![benchmark](./data/plots/runtime.png)
 
-Note that the Python algorithm are called from Julia, which might cause some overhead.
+Note that the Python algorithms are called from Julia, which might cause some overhead.
 
 ### Functions
 

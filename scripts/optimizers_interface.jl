@@ -3,6 +3,9 @@ using Optim, BlackBoxOptim, NLopt, PyCall
 import BlackBoxOptimizationBenchmarking: minimizer, minimum, optimize 
 import Base.string
 
+box(D) = fill((-5.5, 5.5),D)
+pinit(D) = 10*rand(D)-5
+
 # Define optimize, minimum and minimizer for each optimizer
 
 ## NLopt
@@ -20,8 +23,8 @@ import Base.string
         xtol_rel!(opt,1e-12)
         ftol_abs!(opt,1e-12)
         ftol_rel!(opt,1e-12)
-        lower_bounds!(opt, -5*ones(D))
-        upper_bounds!(opt, +5*ones(D))
+        lower_bounds!(opt, -5.5*ones(D))
+        upper_bounds!(opt, +5.5*ones(D))
         minf,minx,ret = NLopt.optimize(opt, pinit(D))
         return NLmeth, minx, minf
     end
@@ -40,8 +43,9 @@ import Base.string
         rl1 = round(Int,m.p*run_length)
         rl2 = run_length - rl1
         
-        _,xinit,_ = optimize(m.first,f,D,run_length)
-        mfit = optimize(m.second,f,D,run_length, xinit) 
+        mfit = optimize(m.first,f,D,run_length)
+        xinit = minimizer(mfit)
+        mfit = optimize(m.second,f,D,run_length,xinit) 
     end
     
     string(m::Chain) = string(string(m.first)," → ", string(m.second))
@@ -91,11 +95,14 @@ import Base.string
 ## Optim
 
     optimize(opt::Optim.AbstractOptimizer,f,D,run_length) =
-        Optim.optimize(f, pinit(D), opt, Optim.Options(f_calls_limit=run_length,g_tol=1e-120))
+        Optim.optimize(f, pinit(D), opt, Optim.Options(f_calls_limit=run_length,g_tol=1e-120,iterations=run_length))
                 
     optimize(opt::Optim.AbstractOptimizer,f,D,run_length,xinit) =
-        Optim.optimize(f, xinit, opt, Optim.Options(f_calls_limit=run_length,g_tol=1e-120))
+        Optim.optimize(f, xinit, opt, Optim.Options(f_calls_limit=run_length,g_tol=1e-120,iterations=run_length))
         
+    optimize(opt::Optim.SAMIN,f,D,run_length) =
+        Optim.optimize(f, fill(-5.5,D), fill(5.5,D), pinit(D), opt, Optim.Options(f_calls_limit=run_length,g_tol=1e-120,iterations=run_length))
+
     string(opt::Optim.AbstractOptimizer) = string(typeof(opt).name)
 
     # Optim with restart
@@ -112,7 +119,7 @@ import Base.string
         fits[argmin(mins)]
     end
 
-    string(opt::OptimRestart) = string("R-",string(opt.opt))
+    string(opt::OptimRestart) = string("Restart-",string(opt.opt))
 
 ## BlackBoxOptim
 
@@ -121,9 +128,6 @@ import Base.string
     end
     string(opt::BlackBoxOptimMethod) = string("BBO.",opt.s)
     
-    box(D) = fill((-5.0, 5.0),D)
-    pinit(D) = 10*rand(D)-5
-
     optimize(method::BlackBoxOptimMethod,f,D,run_length) =
         bboptimize(f; SearchRange=box(D), NumDimensions=D, Method=method.s, MaxFuncEvals=run_length, TraceMode=:silent)
 
