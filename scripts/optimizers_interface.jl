@@ -4,7 +4,7 @@ import BlackBoxOptimizationBenchmarking: minimizer, minimum, optimize
 import Base.string
 
 box(D) = fill((-5.5, 5.5),D)
-pinit(D) = 10*rand(D)-5
+pinit(D) = 10*rand(D).-5
 
 # Define optimize, minimum and minimizer for each optimizer
 
