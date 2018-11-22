@@ -2,7 +2,7 @@ using Gadfly, Colors, BlackBoxOptimizationBenchmarking
 using Distributed, Statistics, DelimitedFiles
 ##
 
-run_bench = false
+run_bench = true
 
 #addprocs(2)
 
@@ -200,6 +200,7 @@ p = plot(
 draw(SVG(joinpath(outdir,"runtime.svg"),16cm,10cm),p)
 nothing
 
+# convert svg to png (Gadfly's png export is broken at the moment)
 # for f in *.svg; do 
 #     svgexport "$f" "${f%.svg}.png" 1.5x
 # done
