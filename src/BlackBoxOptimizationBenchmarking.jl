@@ -124,7 +124,7 @@ module BlackBoxOptimizationBenchmarking
     @define_x_and_f_opt(1)
 
     """ Sphere Function """
-    f1(x) = ∑( (x[i]-x1_opt[i])^2 for i=1:length(x) ) + f1_opt
+    f1(x) = ∑( (x[i] .- x1_opt[i])^2 for i=1:length(x) ) + f1_opt
 
     @BBOBFunction("Sphere",1)
 
@@ -135,7 +135,7 @@ module BlackBoxOptimizationBenchmarking
     """ Ellipsoidal Function """
     function f2(x) 
         D = length(x)
-        z = T_osz(x-x2_opt[1:D])
+        z = T_osz(x .- x2_opt[1:D])
         ∑( 10^(6*(i-1)/(D-1)) * z[i]^2 for i=1:length(x) ) + f2_opt
     end
 
@@ -148,7 +148,7 @@ module BlackBoxOptimizationBenchmarking
     """ Rastrigin Function """
     function f3(x) 
         D = length(x)
-        z = Λ(10,D) * T_asy(T_osz(x-x3_opt[1:D]),0.2)
+        z = Λ(10,D) * T_asy(T_osz(x .- x3_opt[1:D]),0.2)
         10*(D - ∑( cos(2π*z[i]) for i=1:D )) + norm(z)^2 + f3_opt
     end
 
@@ -161,7 +161,7 @@ module BlackBoxOptimizationBenchmarking
     """ Buche-Rastrigin Function """
     function f4(x) 
         D = length(x)
-        z = T_osz(x-x4_opt[1:D])
+        z = T_osz(x .- x4_opt[1:D])
         s = [isodd(i) ? 10*10^(0.5*(i-1)/(D-1)) : 10^(0.5*(i-1)/(D-1)) for i=1:D] 
 
         for i=1:D 
@@ -197,7 +197,7 @@ module BlackBoxOptimizationBenchmarking
     function f6(x) 
         D = length(x)
         
-        z = Q(D)*Λ(10,D)*R(D)*(x - x6_opt[1:D])
+        z = Q(D)*Λ(10,D)*R(D)*(x .- x6_opt[1:D])
         
         @inbounds for i=1:D 
             z[i] = x6_opt[i]*z[i] > 0 ? 100*z[i] : z[i]
@@ -217,7 +217,7 @@ module BlackBoxOptimizationBenchmarking
     function f7(x) 
         D = length(x)
         
-        z = Λ(10,D)*R(D)*(x - x7_opt[1:D])
+        z = Λ(10,D)*R(D)*(x .- x7_opt[1:D])
         zhat_1 = copy(z[1])
         
         @inbounds for i=1:D 
@@ -238,7 +238,7 @@ module BlackBoxOptimizationBenchmarking
     function f8(x) 
         D = length(x)
         
-        z = max(1,√D/8)*(x - x8_opt[1:D]) .+ 1
+        z = max(1,√D/8)*(x .- x8_opt[1:D]) .+ 1
         
         ∑( 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1 ) + f8_opt
     end
@@ -253,7 +253,7 @@ module BlackBoxOptimizationBenchmarking
     function f9(x) 
         D = length(x)
         
-        z = max(1,√D/8)*R(D)*(x - x9_opt[1:D]) .+ 1
+        z = max(1,√D/8)*R(D)*(x .- x9_opt[1:D]) .+ 1
         
         ∑( 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1 ) + f9_opt
     end
@@ -268,7 +268,7 @@ module BlackBoxOptimizationBenchmarking
     function f10(x) 
         D = length(x)
         
-        z = T_osz( R(D)*(x-x10_opt[1:D])) 
+        z = T_osz( R(D)*(x .- x10_opt[1:D])) 
         
         ∑( C(i,D,6)*z[i]^2 for i=1:D ) + f10_opt
     end
@@ -283,7 +283,7 @@ module BlackBoxOptimizationBenchmarking
     function f11(x) 
         D = length(x)
         
-        z = T_osz( R(D)*(x - x11_opt[1:D])) 
+        z = T_osz( R(D)*(x .- x11_opt[1:D])) 
         
         10^6*z[1]^2 + ∑( z[i]^2 for i=2:D ) + f11_opt
     end
@@ -299,13 +299,12 @@ module BlackBoxOptimizationBenchmarking
     function f12(x) 
         D = length(x)
         
-        z = R(D)*T_asy( R(D)*(x - x12_opt[1:D]), 0.5) 
+        z = R(D)*T_asy( R(D)*(x .- x12_opt[1:D]), 0.5) 
         
         z[1]^2 + 10^6*∑( z[i]^2 for i=2:D ) + f12_opt
     end
 
     @BBOBFunction("Bent Cigar Function",12)
-    
     
     ## f13, Sharp Ridge Function
     
@@ -315,7 +314,7 @@ module BlackBoxOptimizationBenchmarking
     function f13(x)
         D = length(x)
         
-        z = Q(D)*Λ(10,D)*R(D)*(x - x13_opt[1:D])
+        z = Q(D)*Λ(10,D)*R(D)*(x .- x13_opt[1:D])
         
         z[1]^2 + 100*√(∑(z[i]^2 for i=2:D )) + f13_opt
     end
@@ -331,7 +330,7 @@ module BlackBoxOptimizationBenchmarking
     function f14(x)
         D = length(x)
         
-        z = R(D)*(x - x14_opt[1:D])
+        z = R(D)*(x .- x14_opt[1:D])
         
         √(∑(abs(z[i])^(2+4(i-1)/(D-1)) for i=1:D )) + f14_opt
     end
@@ -346,7 +345,7 @@ module BlackBoxOptimizationBenchmarking
     function f15(x)
         D = length(x)
 
-        z = R(D)*Λ(10,D)*Q(D)*T_asy(T_osz( R(D)*(x-x15_opt[1:D]) ),0.2)
+        z = R(D)*Λ(10,D)*Q(D)*T_asy(T_osz( R(D)*(x .- x15_opt[1:D]) ),0.2)
         10*(D - ∑( cos(2π*z[i]) for i=1:D )) + norm(z)^2 + f15_opt
     end
     
@@ -362,7 +361,7 @@ module BlackBoxOptimizationBenchmarking
     function f16(x)
         D = length(x)
 
-        z = R(D)*Λ(1/100,D)*Q(D)*T_osz( R(D)*(x-x16_opt[1:D]) )
+        z = R(D)*Λ(1/100,D)*Q(D)*T_osz( R(D)*(x .- x16_opt[1:D]) )
         s = ∑( ∑( 1/2^k * cos(2π*3^k*(z[i]+1/2)) for k=0:11 ) for i=1:D )
         10*( 1/D*s - f0 )^3 + 10/D*f_pen(x) + f16_opt
     end
@@ -377,7 +376,7 @@ module BlackBoxOptimizationBenchmarking
     function f17(x)
         D = length(x)
 
-        z = Λ(10,D)*Q(D)*T_asy( R(D)*(x-x17_opt[1:D]), 0.5)
+        z = Λ(10,D)*Q(D)*T_asy( R(D)*(x .- x17_opt[1:D]), 0.5)
         s = [√(z[i]^2 + z[i+1]^2) for i=1:D-1]
         
         (1/(D-1)*∑( √s[i]*(1 + sin(50*s[i]^1/5 )^2 ) for i=1:D-1 ))^2 + 10*f_pen(x) + f17_opt
@@ -393,7 +392,7 @@ module BlackBoxOptimizationBenchmarking
     function f18(x)
         D = length(x)
 
-        z = Λ(1000,D)*Q(D)*T_asy( R(D)*(x-x18_opt[1:D]), 0.5)
+        z = Λ(1000,D)*Q(D)*T_asy( R(D)*(x .- x18_opt[1:D]), 0.5)
         s = [√(z[i]^2 + z[i+1]^2) for i=1:D-1]
         
         (1/(D-1)*∑( √s[i]*(1 + sin(50*s[i]^1/5 )^2 ) for i=1:D-1 ))^2 + 10*f_pen(x) + f18_opt
@@ -410,7 +409,7 @@ module BlackBoxOptimizationBenchmarking
     function f19(x)
         D = length(x)
 
-        z = max(1,√D/8)*R(D)*(x - x19_opt[1:D]) .+ 1
+        z = max(1,√D/8)*R(D)*(x .- x19_opt[1:D]) .+ 1
         s = [ 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1]
         
         10/(D-1)*∑( s[i]/4000 -cos(s[i]) for i=1:D-1 ) + 10 + f19_opt
@@ -431,7 +430,7 @@ module BlackBoxOptimizationBenchmarking
 
         x = 2*one_pm[1:D] .* x
         
-        z = [i==1 ? x[1] : x[i] + 0.25*(x[i-1]-2*abs(x20_opt[i-1]) ) for i=1:D]
+        z = [i==1 ? x[1] : x[i] + 0.25*(x[i-1] .- 2*abs(x20_opt[i-1]) ) for i=1:D]
         z = 100*( Λ(10,D)*(z- 2*abs.(x20_opt[1:D]) ) + 2*abs.(x20_opt[1:D]) )
         
         -1/(100*D)*∑( z[i]*sin(√(abs(z[i]))) for i=1:D ) + 4.189828872724339 + 100*f_pen(z/100) + f20_opt

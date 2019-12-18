@@ -62,7 +62,7 @@ pinit(D) = 10*rand(D).-5
 
     function optimize(m::PyCMA,f,D,run_length)
         es = cma.CMAEvolutionStrategy(pinit(D), 3, Dict("verb_log"=>0,"verb_disp"=>0,"maxfevals"=>run_length))
-        mfit = es[:optimize](f)[:result]
+        mfit = es.optimize(f).result
         (m,mfit[1],mfit[2])
     end
 
