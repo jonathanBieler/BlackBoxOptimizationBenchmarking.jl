@@ -1,21 +1,22 @@
 module BlackBoxOptimizationBenchmarking
 
-    using Distributions, Memoize, Compat, Optim
-    using LinearAlgebra, Distributed
+    using Distributions, Memoize, Optim
+    using LinearAlgebra, NamedDims
 
-    import Base: enumerate, show, string
-    export show, BBOBFunction, enumerate
+    import Base: show
+    import Optim: minimizer, minimum, optimize
+    export BBOBFunction
     
 ## Constants and Functions
 
     const maximum_dimension = 100
 
-    T_asy(x::Vector{T},β) where T <: Number = [x[i] > 0 ? x[i]^(1+β*(i-1)/(length(x)-1)*√x[i]) : x[i] for i=1:length(x)]
+    T_asy(x::Vector{T}, β) where T <: Number = [x[i] > 0 ? x[i]^(1+β*(i-1)/(length(x)-1)*√x[i]) : x[i] for i=1:length(x)]
 
-    function T_asy(x::Matrix{T},β) where T <: Number 
+    function T_asy(x::Matrix{T}, β) where T <: Number 
         z = similar(x)
-        for i=1:size(x,1)
-            z[i,:] = T_asy(x[i,:],β)
+        for i=1:size(x, 1)
+            z[i, :] = T_asy(x[i, :], β)
         end
         z
     end
@@ -38,23 +39,23 @@ module BlackBoxOptimizationBenchmarking
 
     function T_osz(x::Matrix{T}) where T <: Number 
         z = similar(x)
-        for i=1:size(x,1)
-            z[i,:] = T_osz(x[i,:])
+        for i=1:size(x, 1)
+            z[i, :] = T_osz(x[i, :])
         end
         z
     end
 
-    function Λ(α,D)
-        m = zeros(D,D)
+    function Λ(α, D)
+        m = zeros(D, D)
         for i=1:D
-            m[i,i] = α^(1/2 *(i-1)/(D-1))
+            m[i, i] = α^(1/2 *(i-1)/(D-1))
         end
         m
     end
     
-    C(i,D,n) = 10^(2*(i-1)/(D-1))#conditioning
+    C(i, D, n) = 10^(2*(i-1)/(D-1))#conditioning
     
-    f_pen(x) =  sum(max(0,abs(xi)-5)^2 for xi in x)
+    f_pen(x) =  sum(max(0, abs(xi)-5)^2 for xi in x)
     
     const one_pm = sign.(randn(maximum_dimension))
     
@@ -75,45 +76,46 @@ module BlackBoxOptimizationBenchmarking
     struct BBOBFunction{F<:Function}
         name::String
         f::F
-        x_opt::Array{Float64,1}
+        x_opt::Array{Float64, 1}
         f_opt::Float64
     end
 
     (f::BBOBFunction)(x) = f.f(x)
-    show(io::IO,f::BBOBFunction) =  print(io,f.name)
+    show(io::IO, f::BBOBFunction) =  print(io, f.name)
     Base.broadcastable(f::BBOBFunction) = Ref(f)
+
+    minimum(f::BBOBFunction) = f.f_opt
+    minimizer(f::BBOBFunction, D) = f.x_opt[1:D]
 
     test_x_opt(f::BBOBFunction) = @assert f(f.x_opt) ≈ f.f_opt
     
 ## helpers to define function
 
-    fun_symbols(n) = (map(Symbol, ["F$(n)", "f$(n)", "x$(n)_opt", "f$(n)_opt"])...,)
+    const BBOBFunctions = BBOBFunction[]
+    list_functions() = BBOBFunctions
 
-    macro BBOBFunction(name,n)
-        F,f,x_opt,f_opt = fun_symbols(n)
-        esc(:( $F = BBOBFunction($name,$f,$x_opt,$f_opt) ))
-    end
+    fun_symbols(n) = (map(Symbol, ["F$(n)", "f$(n)", "x$(n)_opt", "f$(n)_opt"])..., )
 
-    function enumerate(::Type{BBOBFunction})
-         n = names(BlackBoxOptimizationBenchmarking, all=true)
-         v = map(x->getfield(BlackBoxOptimizationBenchmarking,x),n)
-         
-         out = BBOBFunction[]
-         for x in v 
-             typeof(x) <: BBOBFunction && push!(out,x)
-         end
-         out
+    macro BBOBFunction(name, simple_name, n)
+        F, f, x_opt, f_opt = fun_symbols(n)
+        fname = Symbol(simple_name)
+        
+        esc(quote
+            $fname = BBOBFunction($name, $f, $x_opt, $f_opt)
+            push!(BBOBFunctions, $fname)
+        end)
     end
+    
 
     """
         Define x1_opt and f1_opt.
 
     """
     macro define_x_and_f_opt(n)
-        F,f,x_opt,f_opt = fun_symbols(n)
+        F, f, x_opt, f_opt = fun_symbols(n)
         esc(quote
-            const $x_opt = rand(Uniform(-4,4),maximum_dimension)
-            const $f_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)), digits=2)))
+            const $x_opt = rand(Uniform(-4, 4), maximum_dimension)
+            const $f_opt = min(1000, max(-1000, round(rand(Cauchy(0, 100)), digits=2)))
         end)
     end
     
@@ -126,7 +128,7 @@ module BlackBoxOptimizationBenchmarking
     """ Sphere Function """
     f1(x) = ∑( (x[i] .- x1_opt[i])^2 for i=1:length(x) ) + f1_opt
 
-    @BBOBFunction("Sphere",1)
+    @BBOBFunction("Sphere", "sphere", 1)
 
     ## f2, Ellipsoidal Function
 
@@ -139,7 +141,7 @@ module BlackBoxOptimizationBenchmarking
         ∑( 10^(6*(i-1)/(D-1)) * z[i]^2 for i=1:length(x) ) + f2_opt
     end
 
-    @BBOBFunction("Ellipsoidal",2)
+    @BBOBFunction("Ellipsoidal", "ellipsoidal", 2)
 
     ## f3, Rastrigin Function
 
@@ -148,11 +150,11 @@ module BlackBoxOptimizationBenchmarking
     """ Rastrigin Function """
     function f3(x) 
         D = length(x)
-        z = Λ(10,D) * T_asy(T_osz(x .- x3_opt[1:D]),0.2)
+        z = Λ(10, D) * T_asy(T_osz(x .- x3_opt[1:D]), 0.2)
         10*(D - ∑( cos(2π*z[i]) for i=1:D )) + norm(z)^2 + f3_opt
     end
 
-    @BBOBFunction("Rastrigin",3)
+    @BBOBFunction("Rastrigin", "rastrigin", 3)
     
     ## f4, Buche-Rastrigin Function
     
@@ -171,12 +173,12 @@ module BlackBoxOptimizationBenchmarking
         10*(D - ∑( cos(2π*z[i]) for i=1:D )) + norm(z)^2 + 100*f_pen(x) + f4_opt
     end
 
-    @BBOBFunction("Buche-Rastrigin",4)
+    @BBOBFunction("Buche-Rastrigin", "buche_rastrigin", 4)
     
     ## f5, Linear Slope
     
     const x5_opt = 5*one_pm
-    const f5_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)), digits=2)))
+    const f5_opt = min(1000, max(-1000, round(rand(Cauchy(0, 100)), digits=2)))
 
     """ Linear Slope """
     function f5(x) 
@@ -187,7 +189,7 @@ module BlackBoxOptimizationBenchmarking
         ∑( 5*abs(s[i]) -s[i]*z[i] for i=1:D ) + f5_opt
     end
 
-    @BBOBFunction("Linear Slope",5)
+    @BBOBFunction("Linear Slope", "linear_slope", 5)
     
     ## f6, Attractive Sector Function
     
@@ -197,7 +199,7 @@ module BlackBoxOptimizationBenchmarking
     function f6(x) 
         D = length(x)
         
-        z = Q(D)*Λ(10,D)*R(D)*(x .- x6_opt[1:D])
+        z = Q(D)*Λ(10, D)*R(D)*(x .- x6_opt[1:D])
         
         @inbounds for i=1:D 
             z[i] = x6_opt[i]*z[i] > 0 ? 100*z[i] : z[i]
@@ -206,7 +208,7 @@ module BlackBoxOptimizationBenchmarking
         T_osz( ∑( z[i]^2 for i=1:D ))^0.9 + f6_opt
     end
 
-    @BBOBFunction("Attractive Sector",6)
+    @BBOBFunction("Attractive Sector", "attractive_sector", 6)
 
     
     ## f7, Step Ellipsoidal Function
@@ -217,7 +219,7 @@ module BlackBoxOptimizationBenchmarking
     function f7(x) 
         D = length(x)
         
-        z = Λ(10,D)*R(D)*(x .- x7_opt[1:D])
+        z = Λ(10, D)*R(D)*(x .- x7_opt[1:D])
         zhat_1 = copy(z[1])
         
         @inbounds for i=1:D 
@@ -228,7 +230,7 @@ module BlackBoxOptimizationBenchmarking
         0.1*max(abs(zhat_1)/(10^4), ∑( 10^(2*(i-1)/(D-1)) * z[i]^2 for i=1:D ) ) + f_pen(x) + f7_opt
     end
 
-    @BBOBFunction("Step Ellipsoidal Function",7)
+    @BBOBFunction("Step Ellipsoidal Function", "step_ellipsoidal", 7)
     
     ## f8, Rosenbrock Function, original
     
@@ -238,12 +240,12 @@ module BlackBoxOptimizationBenchmarking
     function f8(x) 
         D = length(x)
         
-        z = max(1,√D/8)*(x .- x8_opt[1:D]) .+ 1
+        z = max(1, √D/8)*(x .- x8_opt[1:D]) .+ 1
         
         ∑( 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1 ) + f8_opt
     end
 
-    @BBOBFunction("Rosenbrock Function, original",8)
+    @BBOBFunction("Rosenbrock Function, original", "rosenbrock_original", 8)
     
     ## f9, Rosenbrock Function, rotated
     
@@ -253,12 +255,12 @@ module BlackBoxOptimizationBenchmarking
     function f9(x) 
         D = length(x)
         
-        z = max(1,√D/8)*R(D)*(x .- x9_opt[1:D]) .+ 1
+        z = max(1, √D/8)*R(D)*(x .- x9_opt[1:D]) .+ 1
         
         ∑( 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1 ) + f9_opt
     end
 
-    @BBOBFunction("Rosenbrock Function, rotated",9)
+    @BBOBFunction("Rosenbrock Function, rotated", "rosenbrock_rotated", 9)
     
     ## f10, Ellipsoidal Function
     
@@ -270,10 +272,10 @@ module BlackBoxOptimizationBenchmarking
         
         z = T_osz( R(D)*(x .- x10_opt[1:D])) 
         
-        ∑( C(i,D,6)*z[i]^2 for i=1:D ) + f10_opt
+        ∑( C(i, D, 6)*z[i]^2 for i=1:D ) + f10_opt
     end
 
-    @BBOBFunction("Ellipsoidal Function",10)
+    @BBOBFunction("Ellipsoidal Function", "ellipsoidal_second", 10)
     
     ## f11, Discus Function
     
@@ -288,7 +290,7 @@ module BlackBoxOptimizationBenchmarking
         10^6*z[1]^2 + ∑( z[i]^2 for i=2:D ) + f11_opt
     end
 
-    @BBOBFunction("Discus Function",11)
+    @BBOBFunction("Discus Function", "discus", 11)
     
     
     ## f12, Bent Cigar Function
@@ -304,7 +306,7 @@ module BlackBoxOptimizationBenchmarking
         z[1]^2 + 10^6*∑( z[i]^2 for i=2:D ) + f12_opt
     end
 
-    @BBOBFunction("Bent Cigar Function",12)
+    @BBOBFunction("Bent Cigar Function", "bent_cigar", 12)
     
     ## f13, Sharp Ridge Function
     
@@ -314,13 +316,12 @@ module BlackBoxOptimizationBenchmarking
     function f13(x)
         D = length(x)
         
-        z = Q(D)*Λ(10,D)*R(D)*(x .- x13_opt[1:D])
+        z = Q(D)*Λ(10, D)*R(D)*(x .- x13_opt[1:D])
         
         z[1]^2 + 100*√(∑(z[i]^2 for i=2:D )) + f13_opt
     end
 
-    @BBOBFunction("Sharp Ridge Function",13)
-    
+    @BBOBFunction("Sharp Ridge Function", "sharp_ridge", 13)
     
     ## f14, Different Powers Function
     
@@ -335,7 +336,7 @@ module BlackBoxOptimizationBenchmarking
         √(∑(abs(z[i])^(2+4(i-1)/(D-1)) for i=1:D )) + f14_opt
     end
 
-    @BBOBFunction("Different Powers Function",14)
+    @BBOBFunction("Different Powers Function", "different_powers", 14)
     
     ## f15, Rastrigin Function
 
@@ -345,11 +346,11 @@ module BlackBoxOptimizationBenchmarking
     function f15(x)
         D = length(x)
 
-        z = R(D)*Λ(10,D)*Q(D)*T_asy(T_osz( R(D)*(x .- x15_opt[1:D]) ),0.2)
+        z = R(D)*Λ(10, D)*Q(D)*T_asy(T_osz( R(D)*(x .- x15_opt[1:D]) ), 0.2)
         10*(D - ∑( cos(2π*z[i]) for i=1:D )) + norm(z)^2 + f15_opt
     end
     
-    @BBOBFunction("Rastrigin Function",15)
+    @BBOBFunction("Rastrigin Function", "rastrigin2", 15)
 
     ## f16, Weierstrass Function
 
@@ -361,12 +362,12 @@ module BlackBoxOptimizationBenchmarking
     function f16(x)
         D = length(x)
 
-        z = R(D)*Λ(1/100,D)*Q(D)*T_osz( R(D)*(x .- x16_opt[1:D]) )
+        z = R(D)*Λ(1/100, D)*Q(D)*T_osz( R(D)*(x .- x16_opt[1:D]) )
         s = ∑( ∑( 1/2^k * cos(2π*3^k*(z[i]+1/2)) for k=0:11 ) for i=1:D )
         10*( 1/D*s - f0 )^3 + 10/D*f_pen(x) + f16_opt
     end
     
-    @BBOBFunction("Weierstrass Function",16)
+    @BBOBFunction("Weierstrass Function", "weierstrass", 16)
 
     ## f17, Schaffers F7 Function
     
@@ -376,13 +377,13 @@ module BlackBoxOptimizationBenchmarking
     function f17(x)
         D = length(x)
 
-        z = Λ(10,D)*Q(D)*T_asy( R(D)*(x .- x17_opt[1:D]), 0.5)
+        z = Λ(10, D)*Q(D)*T_asy( R(D)*(x .- x17_opt[1:D]), 0.5)
         s = [√(z[i]^2 + z[i+1]^2) for i=1:D-1]
         
         (1/(D-1)*∑( √s[i]*(1 + sin(50*s[i]^1/5 )^2 ) for i=1:D-1 ))^2 + 10*f_pen(x) + f17_opt
     end
     
-    @BBOBFunction("Schaffers F7 Function",17)
+    @BBOBFunction("Schaffers F7 Function", "schaffers_F7", 17)
 
     ## f18, Schaffers F7 Function, moderately ill-conditioned
 
@@ -392,13 +393,13 @@ module BlackBoxOptimizationBenchmarking
     function f18(x)
         D = length(x)
 
-        z = Λ(1000,D)*Q(D)*T_asy( R(D)*(x .- x18_opt[1:D]), 0.5)
+        z = Λ(1000, D)*Q(D)*T_asy( R(D)*(x .- x18_opt[1:D]), 0.5)
         s = [√(z[i]^2 + z[i+1]^2) for i=1:D-1]
         
         (1/(D-1)*∑( √s[i]*(1 + sin(50*s[i]^1/5 )^2 ) for i=1:D-1 ))^2 + 10*f_pen(x) + f18_opt
     end
     
-    @BBOBFunction("Schaffers F7 Function, moderately ill-conditioned",18)
+    @BBOBFunction("Schaffers F7 Function, moderately ill-conditioned", "schaffers_F7_ill_conditioned", 18)
         
 
     ## f19, Composite Griewank-Rosenbrock Function F8F2
@@ -409,20 +410,20 @@ module BlackBoxOptimizationBenchmarking
     function f19(x)
         D = length(x)
 
-        z = max(1,√D/8)*R(D)*(x .- x19_opt[1:D]) .+ 1
+        z = max(1, √D/8)*R(D)*(x .- x19_opt[1:D]) .+ 1
         s = [ 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1]
         
         10/(D-1)*∑( s[i]/4000 -cos(s[i]) for i=1:D-1 ) + 10 + f19_opt
     end
     
-    @BBOBFunction("Composite Griewank-Rosenbrock Function F8F2",19)
+    @BBOBFunction("Composite Griewank-Rosenbrock Function F8F2", "composite_griewank_rosenbrock", 19)
 
 
     ## f20, Schwefel Function
     # https://github.com/numbbo/coco/issues/837
 
     const x20_opt = 4.2096874633/2 * one_pm
-    const f20_opt = min(1000,max(-1000, round(rand(Cauchy(0,100)), digits=2)))
+    const f20_opt = min(1000, max(-1000, round(rand(Cauchy(0, 100)), digits=2)))
     
     """ Schwefel Function """
     function f20(x)
@@ -431,32 +432,32 @@ module BlackBoxOptimizationBenchmarking
         x = 2*one_pm[1:D] .* x
         
         z = [i==1 ? x[1] : x[i] + 0.25*(x[i-1] .- 2*abs(x20_opt[i-1]) ) for i=1:D]
-        z = 100*( Λ(10,D)*(z- 2*abs.(x20_opt[1:D]) ) + 2*abs.(x20_opt[1:D]) )
+        z = 100*( Λ(10, D)*(z- 2*abs.(x20_opt[1:D]) ) + 2*abs.(x20_opt[1:D]) )
         
         -1/(100*D)*∑( z[i]*sin(√(abs(z[i]))) for i=1:D ) + 4.189828872724339 + 100*f_pen(z/100) + f20_opt
     end
     
-    @BBOBFunction("Schwefel Function",20)
+    @BBOBFunction("Schwefel Function", "schwefel_function",  20)
 
 ## Tests
 
-    map(test_x_opt,enumerate(BBOBFunction))
+    map(test_x_opt, BBOBFunctions)
 
 ## utilities 
     
     include("benchmark.jl")
 
-    function run_benchmark()
-        include(joinpath(Pkg.dir(),"BlackBoxOptimizationBenchmarking","src","run_benchmark.jl"))
-    end
+    #function run_benchmark()
+    #    include(joinpath(Pkg.dir(), "BlackBoxOptimizationBenchmarking", "src", "run_benchmark.jl"))
+    #end
 
-    #x = [collect(linspace(-10,10,500)) collect(linspace(-10,10,500))]
+    #x = [collect(linspace(-10, 10, 500)) collect(linspace(-10, 10, 500))]
     #
     #T_osz(x)
     #
-    #y = [f3(x[i,:]) for i=1:size(x,1)]
+    #y = [f3(x[i, :]) for i=1:size(x, 1)]
     #
-    #plot(x=x[:,1],y=y,Geom.line)
+    #plot(x=x[:, 1], y=y, Geom.line)
 
 ##
 end # module

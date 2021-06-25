@@ -23,15 +23,15 @@ minimizer(mfit::Tuple{IntervalOptimisationMethod, Vector{Float64}, Float64}) = m
 
 ## Setup
 
-dimensions = 6
+dimensions = 3
 Ntrials = 30
 Δf = 1e-6
 
 c = opt -> Chain(opt, NelderMead(), 0.9)
 
-funcs = 1:12 #length(enumerate(BBOBFunction))
+funcs = 1:14#length(enumerate(BBOBFunction))
 
-run_lengths = round.(Int, range(20, stop=3_000, length=10))
+run_lengths = round.(Int, range(20, stop = 10_000, length=20))
 
 optimizers = [
     c(BlackBoxOptimMethod(:adaptive_de_rand_1_bin)),
@@ -57,12 +57,12 @@ p = plot(
         Theme(default_color=cols[i], line_style=line_style(i), line_width=2pt)
     ) for i in 1:size(mean_succ,1)]...,
     Coord.cartesian(ymax=1),
-    Guide.title("$funcs"), Guide.xlabel("Run Length"), Guide.ylabel("Success rate"),
+    Guide.title("D: $(dimensions), $funcs"), Guide.xlabel("Run Length"), Guide.ylabel("Success rate"),
     Guide.manual_color_key("", opt_strings[idx], cols[idx]),
     Theme(background_color="white"),
 )
 
-draw(PNG("mean_succ.png",16cm,10cm),p)
+draw(PNG("mean_succ_$(dimensions).png",16cm,10cm),p)
 
 ## runtime
 

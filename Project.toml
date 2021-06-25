@@ -1,0 +1,20 @@
+name = "BlackBoxOptimizationBenchmarking"
+uuid = "6be4b3be-50e2-4a30-a2b4-5a09355b59b7"
+authors = ["Jonathan Bieler <jonathan.bieler@alumni.epfl.ch> and contributors"]
+version = "0.2.0"
+
+[deps]
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Memoize = "c03570c3-d221-55d1-a50c-7939bbd78826"
+NamedDims = "356022a1-0364-5f58-8944-0da4b18d706f"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
