@@ -1,0 +1,3 @@
+[deps]
+BlackBoxOptimizationBenchmarking = "6be4b3be-50e2-4a30-a2b4-5a09355b59b7"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
