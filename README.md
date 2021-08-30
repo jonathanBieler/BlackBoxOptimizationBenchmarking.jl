@@ -1,7 +1,6 @@
 # BlackBoxOptimizationBenchmarking.jl
 
-[![Build Status](https://travis-ci.org/jonathanBieler/BlackBoxOptimizationBenchmarking.jl.svg?branch=master)](https://travis-ci.org/jonathanBieler/BlackBoxOptimizationBenchmarking.jl)
-[![Coverage Status](https://coveralls.io/repos/github/jonathanBieler/BlackBoxOptimizationBenchmarking.jl/badge.svg?branch=master)](https://coveralls.io/github/jonathanBieler/BlackBoxOptimizationBenchmarking.jl?branch=master)
+[![CI](https://github.com/jonathanBieler/BlackBoxOptimizationBenchmarking.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/jonathanBieler/BlackBoxOptimizationBenchmarking.jl/actions/workflows/CI.yml)
 
 A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.gforge.inria.fr) (BBOB) functions.
 
