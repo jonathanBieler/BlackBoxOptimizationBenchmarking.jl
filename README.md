@@ -30,10 +30,10 @@ Note that the Python algorithms are called from Julia, which might cause some ov
 
 Functions can be accessed as `BlackBoxOptimizationBenchmarking.F1`, which returns a `BBOBFunction` with fields `f` containing the function itself, `f_opt` its minimal value, and `x_opt` its minimizer, i.e. `f(x_opt) = f_opt`.
 
-Functions can be listed using `enumerate`:
+Functions can be listed using `list_functions()`:
 
 ```julia
-julia> enumerate(BBOBFunction)
+julia> BlackBoxOptimizationBenchmarking.list_functions()
 20-element Array{BlackBoxOptimizationBenchmarking.BBOBFunction,1}:
  Sphere                                           
  Ellipsoidal Function                             
