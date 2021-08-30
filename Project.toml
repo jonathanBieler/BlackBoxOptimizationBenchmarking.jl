@@ -12,6 +12,10 @@ Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 
 [compat]
 julia = "1"
+Distributions = "0.2, 0.25"
+Memoize = "0.4"
+NamedDims = "0.2"
+Optim = "1, 1.4"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
