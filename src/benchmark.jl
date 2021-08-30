@@ -14,7 +14,7 @@ function benchmark(optimizer, f::BBOBFunction, run_lengths, Ntrials, dimensions,
     
     t = 0.0
     for j in 1:length(run_lengths), k in 1:length(dimensions)
-        Threads.@threads for i in 1:Ntrials
+        for i in 1:Ntrials
             try
                 D = dimensions[k]
                 t += @elapsed mfit = optimize(optimizer, f.f, D, run_lengths[j])
