@@ -1,207 +1,104 @@
-using Gadfly, Colors, BlackBoxOptimizationBenchmarking
-using Distributed, Statistics
 ##
 
-run_bench = true
+using BlackBoxOptimizationBenchmarking, Plots, Optimization, Memoize, Statistics
+import BlackBoxOptimizationBenchmarking.Chain
+const BBOB = BlackBoxOptimizationBenchmarking
 
-nprocs()< 2 && addprocs(2)
+using OptimizationBBO, OptimizationOptimJL, OptimizationEvolutionary, OptimizationNLopt
+using OptimizationMetaheuristics, OptimizationNOMAD
 
-## Setup
-
-bbob_dir = dirname(pathof(BlackBoxOptimizationBenchmarking))
-
-@everywhere begin
-
-    using BlackBoxOptimizationBenchmarking
-    const BBOB = BlackBoxOptimizationBenchmarking
-    bbob_dir = dirname(pathof(BBOB))
-    include(joinpath(bbob_dir,"../scripts/optimizers_interface.jl"))
-
-    dimensions = [3 6 12]
-    Ntrials = 1
-    Δf = 1e-6
-    run_lengths = round.(Int,range(20, stop=3_000, length=15))
-    #run_lengths = round.(Int,linspace(20,20_000,15))
-    funcs = BBOB.list_functions()
-end
-
-c = opt -> Chain(opt,NelderMead(),0.9)
-
-optimizers = [
-    c(SAMIN(;verbosity=0)),
-    NelderMead(), 
-    OptimRestart(NelderMead()),
-    c(SimulatedAnnealing()),
-    c(BlackBoxOptimMethod(:adaptive_de_rand_1_bin_radiuslimited)),
-    c(BlackBoxOptimMethod(:adaptive_de_rand_1_bin)),
-    c(NLoptOptimMethod(:GN_ISRES)),
-    c(NLoptOptimMethod(:GN_ESCH)),
-    c(NLoptOptimMethod(:GD_STOGO)),
-    c(BlackBoxOptimMethod(:xnes)),
-    c(BlackBoxOptimMethod(:generating_set_search)),
-    c(BlackBoxOptimMethod(:de_rand_2_bin)),
-    #BlackBoxOptimMethod(:resampling_memetic_search),#poor performance 
-    PyMinimize("Nelder-Mead"),
-    #PyCMA(),
-]
-
-opt_strings = map(string,optimizers)
-
-## run benchmark
-
-if run_bench
-
-    results = pmap(opt->BBOB.benchmark(opt, funcs, run_lengths, Ntrials, dimensions, Δf), optimizers)
-    error("done")
-    @info("Done, saving data and making plots.")
-
-    # save output
-    outdir = joinpath(bbob_dir,"..","data")
-
-    writedlm(joinpath(outdir,"mean_succ.txt"),mean_succ)
-    writedlm(joinpath(outdir,"mean_dist.txt"),mean_dist)
-    writedlm(joinpath(outdir,"mean_fmin.txt"),mean_fmin)
-    writedlm(joinpath(outdir,"runtime.txt"),runtime)
-else
-    # load output
-    outdir = joinpath(bbob_dir,"..","data")
-
-    s = (length(optimizers),length(funcs),length(run_lengths),length(dimensions))
-    mean_succ = reshape( readdlm(joinpath(outdir,"mean_succ.txt")), s) 
-    mean_dist = reshape( readdlm(joinpath(outdir,"mean_dist.txt")), s)
-    mean_fmin = reshape( readdlm(joinpath(outdir,"mean_fmin.txt")), s)
-    runtime = readdlm(joinpath(outdir,"runtime.txt"))
-end
-
-## make plots
-
-outdir = joinpath(bbob_dir,"..","data","plots")
-cols = Colors.distinguishable_colors(size(mean_succ,1)+1,colorant"white")[2:end]
-line_style = i -> mod(i,2)==0 ? [:solid] : [:dash]
-
-#all together
-
-idx = sortperm([mean(mean_succ[i,:,end,:]) for i=1:length(optimizers)],rev=true)
-
-p = plot(
-    [layer(
-        x=collect(run_lengths),y=mean(mean_succ[i,:,:,:],dims=(1,3)),Geom.line,
-        Theme(default_color=cols[i], line_style=line_style(i), line_width=2pt)
-    ) for i in 1:size(mean_succ,1)]...,
-    Coord.cartesian(ymax=1),
-    Guide.title("All functions"), Guide.xlabel("Run Length"), Guide.ylabel("Success rate"),
-    Guide.manual_color_key("", opt_strings[idx], cols[idx])
+chain = (t; isboxed=false) -> Chain(
+    BenchmarkSetup(t, isboxed = isboxed),
+    BenchmarkSetup(NelderMead(), isboxed = false),
+    0.9
 )
 
-#
+test_functions = BBOB.list_functions()
 
-#draw(PDF(joinpath(outdir,"mean_succ.pdf"),22cm,14cm),p)
-#draw(PNG(joinpath(outdir,"mean_succ.png"),dpi=150,16cm,10cm),p)
-draw(SVG(joinpath(outdir,"mean_succ.svg"),16cm,10cm),p)
+@memoize run_bench(algo) = BBOB.benchmark(setup[algo], test_functions, run_length, Ntrials=30, dimension = 3)
 
-# per dimension
-for (k,D) in zip(1:length(dimensions), dimensions)
+## test one
 
-    idx = sortperm([mean(mean_succ[i,:,end,k]) for i=1:length(optimizers)],rev=true)
-
-    p = plot(
-        [layer(
-            x=collect(run_lengths),y=mean(mean_succ[i,:,:,k],dims=1),Geom.line,
-            Theme(default_color=cols[i], line_style=line_style(i), line_width=2pt)
-        ) for i in 1:size(mean_succ,1)]...,
-        Coord.cartesian(ymax=1),
-        Guide.title("All functions, D: $D"), Guide.xlabel("Run Length"), Guide.ylabel("Success rate"), 
-        Guide.manual_color_key("", opt_strings[idx], cols[idx])
-    )
-    #draw(PDF(joinpath(outdir,"per_dimension","mean_succ_$(D).pdf"),22cm,14cm),p)
-    #draw(PNG(joinpath(outdir,"per_dimension","mean_succ_$(D).png"),dpi=150,16cm,10cm),p)
-    draw(SVG(joinpath(outdir,"per_dimension","mean_succ_$(D).svg"),16cm,10cm),p)
-
-end
-
-## f min
-
-idx = sortperm([exp(mean(log.(mean_fmin[i,:,end,:].+eps()))) for i=1:length(optimizers)],rev=true)
-
-# all together
-p = plot(
-    [layer(
-        x=collect(run_lengths),y=exp.(mean(log.(mean_fmin[i,:,:,:].+eps()),dims=(1,3))),Geom.line,
-        Theme(default_color=cols[i],line_width=2pt)
-    ) 
-    for i in 1:size(mean_succ,1)]...,
-    layer(yintercept=[Δf],Geom.hline,Theme(default_color=colorant"gray")),
-    Guide.title("All functions"), Guide.xlabel("Run Length"), Guide.ylabel("fmin"), 
-    Guide.manual_color_key("", opt_strings[idx], cols[idx]),
-#    Scale.x_log10,
-    Scale.y_log10,
-)
-#draw(PDF(joinpath(outdir,"mean_fmin.pdf"),22cm,14cm),p)
-#draw(PNG(joinpath(outdir,"mean_fmin.png"),dpi=150,16cm,10cm),p)
-draw(SVG(joinpath(outdir,"mean_fmin.svg"),16cm,10cm),p)
-
-#per dimension
-for (k,D) in zip(1:length(dimensions), dimensions)
-
-    idx = sortperm([exp.(mean(log.(mean_fmin[i,:,end,k].+eps()))) for i=1:length(optimizers)],rev=true)
-
-    p = plot(
-        [layer(
-            x=collect(run_lengths)/D,y=exp.(mean(log.(mean_fmin[i,:,:,k].+eps()),dims=1)),Geom.line,
-            Theme(default_color=cols[i],line_width=2pt)
-        ) for i in 1:size(mean_succ,1)]...,
-        layer(yintercept=[Δf],Geom.hline,Theme(default_color=colorant"gray")),
-        Guide.title("All functions"), Guide.xlabel("Run Length / D"), Guide.ylabel("fmin"), 
-        Guide.manual_color_key("", opt_strings[idx], cols[idx]),
-    #    Scale.x_log10,
-        Scale.y_log10,
-    )
-
-    #draw(PDF(joinpath(outdir,"per_dimension","mean_fmin_$(D).pdf"),20cm,12cm),p)
-    #draw(PNG(joinpath(outdir,"per_dimension","mean_fmin_$(D).png"),dpi=150,16cm,10cm),p)
-    draw(SVG(joinpath(outdir,"per_dimension","mean_fmin_$(D).svg"),16cm,10cm),p)
-end
-
-## distance to minimizer
-
-for (k,D) in zip(1:length(dimensions), dimensions)
-
-    p = plot(
-        [layer(x=collect(run_lengths)/D,y=median(mean_dist[i,:,:,k],dims=1),Geom.line,Theme(default_color=cols[i])) for i in 1:size(mean_succ,1)]...,
-        Guide.title("All functions"), Guide.xlabel("Run Length / D"), Guide.ylabel("Distance to xmin"), 
-        Guide.manual_color_key("", opt_strings, cols),
-    #    Scale.x_log10,
-        Scale.y_log10,
-    )
-
-#    #draw(PDF(joinpath(outdir,"per_dimension","mean_dist_$(D).pdf"),20cm,12cm),p)
-    draw(SVG(joinpath(outdir,"per_dimension","mean_dist_$(D).svg"),16cm,10cm),p)
-end
-
-## runtime
-
-idx = sortperm(mean(runtime,dims=2)[:],rev=true)
-
-p = plot(
-    layer(
-        y=opt_strings[idx], x=(mean(runtime,dims=2)/Base.minimum(mean(runtime,dims=2)))[idx],
-        color = cols[idx],
-        Geom.bar(orientation=:horizontal)
-    ),
-    Guide.title("All functions"), Guide.ylabel(""), 
-    Guide.xlabel("Relative Run Time",orientation=:horizontal), 
-    Scale.x_log10,
-#    Scale.y_log10,
+setup = Dict(
+    "NelderMead" => NelderMead(),
+    #Optim.BFGS(),
+    "NLopt.GN_MLSL_LDS" => chain(NLopt.GN_MLSL_LDS(), isboxed=true),
+    "NLopt.GN_CRS2_LM()" => chain(NLopt.GN_CRS2_LM(), isboxed=true),
+    "NLopt.GN_DIRECT()" => chain(NLopt.GN_DIRECT(), isboxed=true),
+    "NLopt.GN_ESCH()"  => chain(NLopt.GN_ESCH(), isboxed=true),
+    "OptimizationEvolutionary.GA()" => chain(OptimizationEvolutionary.GA()),
+    "OptimizationEvolutionary.DE()" => chain(OptimizationEvolutionary.DE()),
+    "OptimizationEvolutionary.ES()" => chain(OptimizationEvolutionary.ES()),
+    "Optim.SAMIN" => chain(SAMIN(verbosity=0), isboxed=true),
+    "BBO_adaptive_de_rand_1_bin" => chain(BBO_adaptive_de_rand_1_bin(), isboxed=true),
+    "BBO_separable_nes" => chain(BBO_separable_nes(), isboxed=true),
+    "BBO_xnes" => chain(BBO_xnes(), isboxed=true),
+    # "NOMADOpt" => chain(NOMADOpt()), too much printing
+    "OptimizationMetaheuristics.ECA" => chain(OptimizationMetaheuristics.ECA(), isboxed=true),
+    "OptimizationMetaheuristics.CGSA" => chain(OptimizationMetaheuristics.CGSA(), isboxed=true),
+    "OptimizationMetaheuristics.DE" => chain(OptimizationMetaheuristics.DE(), isboxed=true),
+    #chain(BBO_adaptive_de_rand_1_bin_radiuslimited(), isboxed=true), # same as BBO_adaptive_de_rand_1_bin
 )
 
-#draw(PDF(joinpath(outdir,"runtime.pdf"),20cm,12cm),p)
-#draw(PNG(joinpath(outdir,"runtime.png"),dpi=150,16cm,10cm),p)
-draw(SVG(joinpath(outdir,"runtime.svg"),16cm,10cm),p)
-nothing
+@time b = BBOB.benchmark(
+    setup["OptimizationMetaheuristics.CGSA"], test_functions[1:3], 100:500:5000, Ntrials=10, dimension = 3
+)
 
-# convert svg to png (Gadfly's png export is broken at the moment)
-# for f in *.svg; do 
-#     svgexport "$f" "${f%.svg}.png" 1.5x
-# done
+plot(b)
+
+## try all
+
+results = Array{BBOB.BenchmarkResults}(undef, length(setup))
+
+run_length = round.(Int, 10 .^ LinRange(1,4,25))
+
+Threads.@threads for (i,algo) in collect(enumerate(keys(setup)))
+    results[i] = run_bench(algo)
+end
+
+## plot
+
+labels = collect(keys(setup))
+idx = sortperm([b.success_rate[end] for b in results], rev=true)
+
+p = plot(xscale = :log10, legend = :outerright, size = (800,600), margin=10Plots.px)
+for i in idx
+    plot!(results[i], label = labels[i], showribbon=false, lw=2)
+end
+p
+
+## make heatmap per function
+
+success_rate_per_function = reduce(hcat, b.success_rate_per_function for b in results)
+
+idx = sortperm(mean(success_rate_per_function, dims=1)[:], rev=false)
+idxfunc = sortperm(mean(success_rate_per_function, dims=2)[:], rev=true)
+idxfunc = 1:length(test_functions)
+
+heatmap(
+    string.(test_functions)[idxfunc], labels[idx], success_rate_per_function[idxfunc, idx]',
+    cmap = :RdYlGn,
+    xticks = :all,
+    xrotation = 45,
+)
+
+##
+
+bar(getfield.(results, :runtime))
+
+## run a single problem and plot solution
+
+Δf = 1e-5
+f = test_functions[3]
+algo = "NLopt.GN_CRS2_LM()"
+sol = [BBOB.solve_problem(setup[algo], f, 3, 5_000) for in in 1:10]
+
+@info [sol.objective < Δf + f.f_opt for sol in sol]
+
+p = plot(f, size = (600,600), zoom = 1)
+for sol in sol
+    scatter!(sol.u[1:1], sol.u[2:2], label="", c="blue", marker = :xcross)
+end
+p
 
 ##

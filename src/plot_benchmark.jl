@@ -1,4 +1,4 @@
-@recipe function f(benchmark::BenchmarkResults; title = nothing, color = :auto, label = "")
+@recipe function f(benchmark::BenchmarkResults; title = "", color = :auto, label = "", x = :callcount, showribbon = true)
 
     markersize := 3
     titlefontsize := 10
@@ -8,18 +8,25 @@
         color := color
         label := label
         subplot := 1
-        xlabel := "Run length"
+        xlabel := x == :callcount ? "Function calls" : "Iterations"
         ylabel := "Success rate"
         ylim := (0,1)
-        if title != nothing
-            title := title
+        
+        title := title
+    
+        if x == :callcount
+            x = benchmark.callcount
+        elseif x == :run_length 
+            x = benchmark.run_length
+        else
+            error("Valid options for x are : :run_length or :callcount")
         end
-
-        x = benchmark.run_length
         y = benchmark.success_rate
 
         yerror = (abs.(benchmark.success_rate_qlow .- y), benchmark.success_rate_qhigh .- y)
-        ribbon := yerror
+        if showribbon
+            ribbon := yerror
+        end
 
         x, y
     end
