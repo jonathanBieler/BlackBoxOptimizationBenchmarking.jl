@@ -52,16 +52,16 @@ show(io::IO, b::BenchmarkSetup{T}) where {T} =  begin
     println(io, nameof(T))
 end
 
-# FunctionCallCounter : keep count of how many time our function is called
+# FunctionCallsCounter : keep count of how many time our function is called
 
-mutable struct FunctionCallCounter
+mutable struct FunctionCallsCounter
     f::Function
-    count::Int
+    @atomic count::Int
 end
-FunctionCallCounter(f::Function) = FunctionCallCounter(f,0)
+FunctionCallsCounter(f::Function) = FunctionCallsCounter(f,0)
 
-function (f::FunctionCallCounter)(args) 
-    f.count += 1
+function (f::FunctionCallsCounter)(args)
+    @atomic f.count += 1
     f.f(args)
 end
 
@@ -82,9 +82,9 @@ function solve_problem(m::Chain, f, D::Int, run_length::Int)
     rl1 = round(Int, m.p*run_length)
     rl2 = run_length - rl1
     
-    sol = solve_problem(m.first, f, D, run_length)
+    sol = solve_problem(m.first, f, D, rl1)
     xinit = sol.u
-    sol = solve_problem(m.second, f, D, run_length; u0=xinit)
+    sol = solve_problem(m.second, f, D, rl2; u0=xinit)
 end
 
 function solve_problem(optimizer::BenchmarkSetup, f, D::Int, run_length::Int; u0 = pinit(D))
@@ -119,7 +119,7 @@ function benchmark(
     for j in 1:length(run_length)
         for i in 1:Ntrials
             try
-                fcountner = FunctionCallCounter(f.f)
+                fcountner = FunctionCallsCounter(f.f)
                 t += @elapsed sol = solve_problem(optimizer, fcountner, dimension, run_length[j])
                 
                 sol.objective, sol.u

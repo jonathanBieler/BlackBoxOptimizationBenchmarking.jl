@@ -6,19 +6,11 @@ A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.
 
 ### Benchmark results
 
-The average sucess rate (meaning the optimizer reached the minimum + 1e-6) in function of the number of objective function evaluations : 
+The average sucess rate (meaning the optimizer reached the minimum + 1e-6) in function of the number of objective function evaluations, in 3 dimension : 
 
-![benchmark](./data/plots/mean_succ.png)
+<img src="./data/plots/mean_success_3D.png" width="800">
 
 Since some global optimizers have poor final convergence, they were chained into a Nelder-Mead using 10% of the objective function evaluation budget.
-
-#### The average sucess rate across the dimension of the function: 
-
-![benchmark](./data/plots/per_dimension/mean_succ_3.png)
-
-![benchmark](./data/plots/per_dimension/mean_succ_6.png)
-
-![benchmark](./data/plots/per_dimension/mean_succ_12.png)
 
 #### The total relative run time of each optimizer
 
@@ -57,23 +49,49 @@ julia> BlackBoxOptimizationBenchmarking.list_functions()
  Rosenbrock Function, rotated
  ```
  
+Functions can be plot using :
+
+```julia
+using Plots
+plot(f::BBOBFunction; nlevels = 15, zoom=1)
+```
+
+### Benchmarks
+
 A benchmark for a single optimizer and function can be run with:
 
 ```julia
-benchmark(optimizer::Any, f::BBOBFunction, run_lengths, Ntrials, dimensions, Δf)
+b::BenchmarkResults = benchmark(
+    optimizer, f::BBOBFunction, run_length::AbstractVector{Int}; 
+    Ntrials::Int = 20, dimension::Int = 3, Δf::Real = 1e-6, CI_quantile=0.25
+)
 ```
 
-Or for a collection of optimizers with:
+The first argument `optimizer` must implement [Optimization.jl](https://docs.sciml.ai/Optimization/stable/)'s interface.
+If the optimizer requires bounds it must be wrapped in a `BenchmarkSetup` :
+
+`BenchmarkSetup(optimizer, isboxed = true)`
+
+To test an optimizer on several functions a vector of `BBOBFunction`'s can be passed instead of a single function, 
+and all the returned statistics will be averaged over functions (with the expection of `success_rate_per_function`).
+
+The main fields of the returned struct `BenchmarkResults` are : 
+
+- `run_length` : number of iterations the optimizer performed
+- `callcount` : number of objective function calls
+- `success_rate` : for each run_length, the fraction of optimization runs that reached the minimum + Δf
+
+A benchmark can be plot with :
 
 ```julia
-benchmark(optimizers::Vector{T}, funcs, run_lengths, Ntrials, dimensions, Δf)
+using Plots
+
+plot(b; label = "NelderMead", x = :callcount, showribbon = true)
+plot!(another_benchmark)
 ```
 
-See [test/runtests.jl](test/runtests.jl)         
-
-The optimizer must implement the methods `optimize`, `minimum` and `minimizer`, see
-
-[scripts/optimizers_interface.jl](scripts/optimizers_interface.jl)
+The ribbon indicates the 25% to 95% confidence intervals of the `success_rate` (the quantile used
+can be changed with `compute_CI!(b::BenchmarkResults, CI_quantile)`).
 
 ### Generating new instance of the functions
 
