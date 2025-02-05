@@ -1,6 +1,5 @@
 [deps]
 BlackBoxOptimizationBenchmarking = "4552ee2b-11da-5aef-8e78-0d48532001f1"
-LimitOfDetection = "9907b50f-aa68-471e-a8e7-09e46bc3166c"
 Memoize = "c03570c3-d221-55d1-a50c-7939bbd78826"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 OptimizationBBO = "3e6eede4-6085-4f62-9a71-46d9bc1eb92b"

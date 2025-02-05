@@ -6,21 +6,24 @@ A Julia implementation of the [Black-Box-Optimization-Benchmarking](http://coco.
 
 ### Benchmark results
 
-The average sucess rate (meaning the optimizer reached the minimum + 1e-6) in function of the number of objective function evaluations, in 3 dimension : 
+The average sucess rate (meaning the optimizer reached the minimum + 1e-6) in function of the number of iterations, in 3 dimension : 
 
 <img src="./data/plots/mean_success_3D.png" width="800">
 
+BlackBoxOptim's algorithm are performing the best in 3D.
+
 Since some global optimizers have poor final convergence, they were chained into a Nelder-Mead using 10% of the objective function evaluation budget.
+Note that some algorithm call the objective function several time per iteration, so this plot is not totally fair (it doesn't really impact the results however).
 
-#### The total relative run time of each optimizer
+If we look at the sucess rate per function we can see that only a few algorithm are able to solve all the problems :
 
-![benchmark](./data/plots/runtime.png)
+<img src="./data/plots/mean_success_per_function_3D.png" width="800">
 
-Note that the Python algorithms are called from Julia, which might cause some overhead.
+The script to produce these plots is in `scripts/run_benchmark.jl`.
 
 ### Functions
 
-Functions can be accessed as `BlackBoxOptimizationBenchmarking.F1`, which returns a `BBOBFunction` with fields `f` containing the function itself, `f_opt` its minimal value, and `x_opt` its minimizer, i.e. `f(x_opt) = f_opt`.
+Indivdual functions can be accessed as `BlackBoxOptimizationBenchmarking.F1`, which returns a `BBOBFunction` with fields `f` containing the function itself, `f_opt` its minimal value, and `x_opt` its minimizer, i.e. `f(x_opt) = f_opt`.
 
 Functions can be listed using `list_functions()`:
 
@@ -67,8 +70,8 @@ b::BenchmarkResults = benchmark(
 )
 ```
 
-The first argument `optimizer` must implement [Optimization.jl](https://docs.sciml.ai/Optimization/stable/)'s interface.
-If the optimizer requires bounds it must be wrapped in a `BenchmarkSetup` :
+The first argument `optimizer` must implement [Optimization.jl](https://docs.sciml.ai/Optimization/stable/)'s interface, and
+it must be wrapped in a `BenchmarkSetup` to indicate if the optimizer requires bounds :
 
 `BenchmarkSetup(optimizer, isboxed = true)`
 
@@ -79,7 +82,7 @@ The main fields of the returned struct `BenchmarkResults` are :
 
 - `run_length` : number of iterations the optimizer performed
 - `callcount` : number of objective function calls
-- `success_rate` : for each run_length, the fraction of optimization runs that reached the minimum + Δf
+- `success_rate` : for each run_length, the fraction of optimization runs that reached the global minimum with a tolerance of Δf
 
 A benchmark can be plot with :
 
@@ -92,6 +95,26 @@ plot!(another_benchmark)
 
 The ribbon indicates the 25% to 95% confidence intervals of the `success_rate` (the quantile used
 can be changed with `compute_CI!(b::BenchmarkResults, CI_quantile)`).
+
+We can test an algorithm on a function and plot the result using
+
+```julia
+Δf = 1e-6
+f = test_functions[3]
+
+setup = BenchmarkSetup(NLopt.GN_CRS2_LM(), isboxed=true)
+
+sol = [BBOB.solve_problem(setup, f, 3, 5_000) for in in 1:10]
+@info [sol.objective < Δf + f.f_opt for sol in sol]
+
+p = plot(f, size = (600,600), zoom = 1.5)
+for sol in sol
+    scatter!(sol.u[1:1], sol.u[2:2], label="", c="blue", marker = :xcross, markersize=5, markerstrokewidth=0)
+end
+p
+```
+
+<img src="./data/plots/Rastrigin_example.png" width="400">
 
 ### Generating new instance of the functions
 

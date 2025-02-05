@@ -103,10 +103,10 @@ end
 
 function benchmark(
     optimizer::Union{Chain,BenchmarkSetup}, f::BBOBFunction, run_length::AbstractVector{Int}; 
-    Ntrials::Int = 20, dimension::Int = 3, Δf::Real = 1e-6, CI_quantile=0.25
+    Ntrials::Int = 20, dimension::Int = 3, Δf::Real = 1e-6, CI_quantile=0.25, verbose=true
     )
 
-    @info("$(string(optimizer))\t $f")
+    verbose && @info("$(string(optimizer))\t $f")
 
     t = (T) -> zeros(T, Ntrials, length(run_length))
         

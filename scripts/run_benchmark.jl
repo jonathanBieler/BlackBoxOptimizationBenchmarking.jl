@@ -15,8 +15,8 @@ chain = (t; isboxed=false) -> Chain(
 
 test_functions = BBOB.list_functions()
 dimension = 3
-
 run_length = round.(Int, 10 .^ LinRange(1,5,30))
+
 @memoize run_bench(algo) = BBOB.benchmark(setup[algo], test_functions, run_length, Ntrials=40, dimension = dimension)
 
 ## test one
@@ -24,7 +24,7 @@ run_length = round.(Int, 10 .^ LinRange(1,5,30))
 setup = Dict(
     "NelderMead" => NelderMead(),
     #Optim.BFGS(),
-    "NLopt.GN_MLSL_LDS" => chain(NLopt.GN_MLSL_LDS(), isboxed=true),
+    #"NLopt.GN_MLSL_LDS" => chain(NLopt.GN_MLSL_LDS(), isboxed=true), # gives me errors
     "NLopt.GN_CRS2_LM()" => chain(NLopt.GN_CRS2_LM(), isboxed=true),
     "NLopt.GN_DIRECT()" => chain(NLopt.GN_DIRECT(), isboxed=true),
     "NLopt.GN_ESCH()"  => chain(NLopt.GN_ESCH(), isboxed=true),
@@ -39,7 +39,7 @@ setup = Dict(
     #"BBO_xnes" => chain(BBO_xnes(), isboxed=true), # good but slow
     #"BBO_dxnes" => chain(BBO_dxnes(), isboxed=true), 
     "OptimizationMetaheuristics.ECA" => chain(OptimizationMetaheuristics.ECA(), isboxed=true),
-    "OptimizationMetaheuristics.CGSA" => () -> chain(OptimizationMetaheuristics.CGSA(), isboxed=true),
+    #"OptimizationMetaheuristics.CGSA" => () -> chain(OptimizationMetaheuristics.CGSA(), isboxed=true), #give me strange results
     "OptimizationMetaheuristics.DE" => chain(OptimizationMetaheuristics.DE(), isboxed=true),
     "Optimisers.AdamW" => chain(Optimisers.AdamW(), isboxed=false),
     "Optimisers.RMSProp" => chain(Optimisers.RMSProp(), isboxed=false),
@@ -55,14 +55,6 @@ setup = Dict(
 )
 
 plot(b)
-
-##
-
-funcs = test_functions[1:10]
-optimizer = setup["OptimizationMetaheuristics.CGSA"]()
-Ntrials = 10
-
-res = [BBOB.benchmark(optimizer, f, run_length; Ntrials, dimension, Δf) for f in funcs]
 
 ## do all
 
@@ -106,38 +98,47 @@ p
 ## distance to minimum
 
 labels = collect(keys(setup))
-idx = sortperm([b.success_rate[end] for b in results], rev=true)
+idx = sortperm([b.distance_to_minimizer[end] for b in results], rev=false)
 
 p = plot(xscale = :log10, legend = :outerright, size = (900,500), margin=10Plots.px, ylim = (0,5))
 for i in idx
-    plot!(results[i].callcount, results[i].distance_to_minimizer, label = labels[i], showribbon=false, lw=2, xlim = (1,1e5))
+    plot!(
+        results[i].run_length, results[i].distance_to_minimizer, label = labels[i],
+        showribbon=false, lw=2, xlim = (1,1e5),
+        xlabel = "Iterations", ylabel = "Mean distance to minimum"
+    )
 end
+savefig(p, "data/plots/mean_distance_to_minimum_$(dimension)D.png")
 p
 
 ##
 
-bar(labels, getfield.(results, :runtime), xrotation = :45, xticks = :all)
+ref = findfirst("NelderMead" .== labels)
+runtimes = getfield.(results, :runtime)
+runtimes = runtimes ./ runtimes[ref]
+
+bar(
+    labels, runtimes, xrotation = :45, xticks = :all, ylabel = "Run time relative to NM",
+    yscale = :log10, yticks = [0.1,1,10,100],
+    legend = false, margin = 25Plots.px
+)
 
 ## run a single problem and plot solution
 
 Δf = 1e-6
 f = test_functions[3]
-algo = "NLopt.GN_CRS2_LM()"
-algo = "OptimizationEvolutionary.GA()"
-algo = "OptimizationMetaheuristics.CGSA"
-sol = [BBOB.solve_problem(setup[algo], f, 3, 5_000) for in in 1:10]
 
-#algo = chain(OptimizationMetaheuristics.CGSA(), isboxed=true)
-#sol = [BBOB.solve_problem(algo, f, 3, 5_000) for in in 1:10]
+setup = BenchmarkSetup(NLopt.GN_CRS2_LM(), isboxed=true)
 
+sol = [BBOB.solve_problem(setup, f, 3, 5_000) for in in 1:10]
 @info [sol.objective < Δf + f.f_opt for sol in sol]
 
-[sol.objective  for sol in sol]
-
-p = plot(f, size = (600,600), zoom = 1)
+p = plot(f, size = (600,600), zoom = 1.5)
 for sol in sol
-    scatter!(sol.u[1:1], sol.u[2:2], label="", c="blue", marker = :xcross, markersize=5)
+    scatter!(sol.u[1:1], sol.u[2:2], label="", c="blue", marker = :xcross, markersize=5, markerstrokewidth=0)
 end
+
+savefig(p, "data/plots/Rastrigin_example.png")
 p
 
 ##

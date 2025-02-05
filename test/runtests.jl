@@ -5,6 +5,8 @@ const BBOB = BlackBoxOptimizationBenchmarking
 
 using OptimizationBBO, OptimizationOptimJL
 
+##
+
 map(BBOB.test_x_opt, BBOB.list_functions())
 
 test_functions = BBOB.list_functions()
@@ -20,18 +22,18 @@ b = BBOB.benchmark(
 @test length(b.success_count) == 3
 
 b = BBOB.benchmark(
-    NelderMead(), test_functions[1:3], 100:100:2000, Ntrials=30,
+    NelderMead(), test_functions[1:3], 100:100:2000, Ntrials=10,
 )
 
 b2 = BBOB.benchmark(
-    ParticleSwarm(), test_functions[1:3], 100:200:5000, Ntrials=20,
+    ParticleSwarm(), test_functions[1:3], 100:200:2000, Ntrials=10,
 )
 
 BBOB.compute_CI!(b, 0.1)
 plot(b; title = "Benchmark", label = "NelderMead", legend = :outerright)
 plot!(b2; label = "ParticleSwarm")
 
-## Optimization
+## OptimizationBBO
 
 D = 2
 
@@ -44,10 +46,15 @@ setup = Chain(
 )
 
 b = BBOB.benchmark(
-    setup, test_functions[1:2], 100:200:5000, Ntrials=30,
+    setup, test_functions[1:2], 100:200:5000, Ntrials=10,
 )
 
 plot(b)
+
+##
+
+plot(test_functions[1])
+
 
 
 ##
