@@ -1,7 +1,7 @@
 name = "BlackBoxOptimizationBenchmarking"
 uuid = "4552ee2b-11da-5aef-8e78-0d48532001f1"
 authors = ["Jonathan Bieler <jonathan.bieler@alumni.epfl.ch> and contributors"]
-version = "1.0.0"
+version = "1.0.1"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -16,8 +16,8 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 Distributions = "0.2, 0.25"
 Memoize = "0.4"
 Optim = "1, 1.4"
-Optimization = "4"
-julia = "1.10"
+Optimization = "3,4,5"
+julia = "1"
 RecipesBase = "1"
 
 [extras]
