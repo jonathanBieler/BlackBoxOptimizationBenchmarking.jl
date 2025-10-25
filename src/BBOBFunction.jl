@@ -102,10 +102,12 @@ end
     Define x1_opt and f1_opt.
 
 """
+const BBOB_range_start = -5
+const BBOB_range_end = 5
 macro define_x_and_f_opt(n)
     F, f, x_opt, f_opt = fun_symbols(n)
     esc(quote
-        const $x_opt = rand(Uniform(-4, 4), maximum_dimension)
+        const $x_opt = rand(Uniform(BBOB_range_start, BBOB_range_end), maximum_dimension)
         const $f_opt = min(1000, max(-1000, round(rand(Cauchy(0, 100)), digits=2)))
     end)
 end
