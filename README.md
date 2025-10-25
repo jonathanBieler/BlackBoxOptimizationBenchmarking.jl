@@ -138,4 +138,4 @@ end
 
 ### Reference:
 
-http://coco.lri.fr/downloads/download15.01/bbobdocfunctions.pdf
+https://numbbo.github.io/gforge/downloads/download16.00/bbobdocfunctions.pdf
