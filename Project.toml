@@ -1,7 +1,7 @@
 name = "BlackBoxOptimizationBenchmarking"
 uuid = "4552ee2b-11da-5aef-8e78-0d48532001f1"
 authors = ["Jonathan Bieler <jonathan.bieler@alumni.epfl.ch> and contributors"]
-version = "1.0.1"
+version = "1.0.2"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
