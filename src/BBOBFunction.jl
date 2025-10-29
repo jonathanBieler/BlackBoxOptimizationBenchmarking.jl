@@ -119,7 +119,7 @@ end
 @define_x_and_f_opt(1)
 
 """ Sphere Function """
-f1(x) = ∑( (x[i] .- x1_opt[i])^2 for i=1:length(x) ) + f1_opt
+f1(x) = ∑( (x[i] - x1_opt[i])^2 for i=1:length(x) ) + f1_opt
 
 @BBOBFunction("Sphere", "sphere", 1)
 
