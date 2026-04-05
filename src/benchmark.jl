@@ -54,11 +54,11 @@ end
 
 # FunctionCallsCounter : keep count of how many time our function is called
 
-mutable struct FunctionCallsCounter
-    f::Function
+mutable struct FunctionCallsCounter{F}
+    f::F
     @atomic count::Int
 end
-FunctionCallsCounter(f::Function) = FunctionCallsCounter(f,0)
+FunctionCallsCounter(f::F) where {F} = FunctionCallsCounter{F}(f, 0)
 
 function (f::FunctionCallsCounter)(args)
     @atomic f.count += 1
@@ -102,9 +102,9 @@ function solve_problem(optimizer::BenchmarkSetup, f, D::Int, run_length::Int; u0
 end
 
 function benchmark(
-    optimizer::Union{Chain,BenchmarkSetup}, f::BBOBFunction, run_length::AbstractVector{Int}; 
-    Ntrials::Int = 20, dimension::Int = 3, Δf::Real = 1e-6, CI_quantile=0.25, verbose=true
-    )
+    optimizer::Union{Chain,BenchmarkSetup}, f::BBOBFunction{F, N, M}, run_length::AbstractVector{Int}; 
+    Ntrials::Int = 20, Δf::Real = 1e-6, CI_quantile=0.25, verbose=true
+    ) where {F, N, M}
 
     verbose && @info("$(string(optimizer))\t $f")
 
@@ -119,13 +119,13 @@ function benchmark(
     for j in 1:length(run_length)
         for i in 1:Ntrials
             try
-                fcountner = FunctionCallsCounter(f.f)
-                t += @elapsed sol = solve_problem(optimizer, fcountner, dimension, run_length[j])
+                fcountner = FunctionCallsCounter(f)
+                t += @elapsed sol = solve_problem(optimizer, fcountner, N, run_length[j])
                 
                 sol.objective, sol.u
                 reached_minium[i,j] = sol.objective < Δf + f.f_opt
                 fmin[i,j] = sol.objective - f.f_opt 
-                distance_to_xopt[i,j] =  √sum(abs2.(sol.u - f.x_opt[1:dimension]))
+                distance_to_xopt[i,j] =  √sum(abs2.(sol.u - f.x_opt))
                 callcount[i,j] = fcountner.count
 
             catch err
@@ -163,18 +163,18 @@ end
 
 
 benchmark(optimizer, funcs, run_length::AbstractVector{Int}; 
-    Ntrials::Int = 20, dimension::Int = 3, Δf::Real = 1e-6, CI_quantile=0.25
+    Ntrials::Int = 20, Δf::Real = 1e-6, CI_quantile=0.25
 ) = benchmark(
-    BenchmarkSetup(optimizer), funcs, run_length; Ntrials, dimension, Δf, CI_quantile
+    BenchmarkSetup(optimizer), funcs, run_length; Ntrials, Δf, CI_quantile
 )
 
 #
 function benchmark(
-    optimizer::Union{Chain,BenchmarkSetup}, funcs::Vector{BBOBFunction}, run_length::AbstractVector{Int}; 
-    Ntrials::Int = 20, dimension::Int = 3, Δf::Real = 1e-6, CI_quantile=0.25
+    optimizer::Union{Chain,BenchmarkSetup}, funcs::Vector{<:BBOBFunction}, run_length::AbstractVector{Int}; 
+    Ntrials::Int = 20, Δf::Real = 1e-6, CI_quantile=0.25
     )
     
-    res = [benchmark(optimizer, f, run_length; Ntrials, dimension, Δf) for f in funcs]
+    res = [benchmark(optimizer, f, run_length; Ntrials, Δf) for f in funcs]
     reduce_res(res, field, f=mean) = f(getfield(r, field) for r in res)
     
     Neff = Ntrials * length(funcs)
@@ -198,6 +198,3 @@ function benchmark(
 end
 
 ##
-
-
-

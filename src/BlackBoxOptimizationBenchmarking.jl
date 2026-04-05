@@ -1,12 +1,13 @@
 module BlackBoxOptimizationBenchmarking
 
-    using Distributions, Memoize, Optimization, Optim
+    using Distributions, Optimization, Optim
+    using StaticArrays, Random
     using LinearAlgebra, RecipesBase
 
     import Optim: minimum, minimizer
     import Base: show
 
-    export BBOBFunction, BenchmarkSetup
+    export BBOBFunction, BenchmarkSetup, bbob_suite
     
     include("BBOBFunction.jl")
     include("benchmark.jl")

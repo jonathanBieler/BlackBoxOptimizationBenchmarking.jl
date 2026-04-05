@@ -1,437 +1,324 @@
 ## Constants and Functions
 
+using StaticArrays, LinearAlgebra, Random
+
 const maximum_dimension = 100
 
-T_asy(x::Vector{T}, β) where T <: Number = [x[i] > 0 ? x[i]^(1+β*(i-1)/(length(x)-1)*√x[i]) : x[i] for i=1:length(x)]
+@inline _safe_sqrt(x) = sqrt(max(x, zero(x)))
 
-function T_asy(x::Matrix{T}, β) where T <: Number 
-    z = similar(x)
-    for i=1:size(x, 1)
-        z[i, :] = T_asy(x[i, :], β)
-    end
-    z
-end
-
-function T_osz(xi::T) where T <: Number 
+@inline function T_osz(xi::T) where T <: Number
     xhat = xi != zero(T) ? log(abs(xi)) : zero(T)
-    c1 = xi > 0 ? 10. : 5.5
-    c2 = xi > 0 ? 7.9 : 3.1
-
-    sign(xi) * exp(xhat + 0.049*(sin(c1*xhat)+sin(c2*xhat) ))
+    c1 = xi > zero(T) ? T(10) : T(5.5)
+    c2 = xi > zero(T) ? T(7.9) : T(3.1)
+    sign(xi) * exp(xhat + T(0.049) * (sin(c1 * xhat) + sin(c2 * xhat)))
 end
 
-function T_osz(x::Vector{T}) where T <: Number 
-    z = similar(x)
-    for i=1:length(x)
-        z[i] = T_osz(x[i])
-    end
-    z
+@inline T_osz(x::SVector) = map(T_osz, x)
+
+@inline function T_asy(x::SVector{N, T}, β) where {N, T}
+    SVector{N, T}(ntuple(Val(N)) do i
+        xi = x[i]
+        xi > zero(T) ? xi^(one(T) + T(β) * T(i - 1) / T(N - 1) * _safe_sqrt(xi)) : xi
+    end)
 end
 
-function T_osz(x::Matrix{T}) where T <: Number 
-    z = similar(x)
-    for i=1:size(x, 1)
-        z[i, :] = T_osz(x[i, :])
-    end
-    z
+@inline function Λ_mul(::Val{N}, α::T, x::SVector{N, T}) where {N, T}
+    SVector{N, T}(ntuple(i -> α^(T(0.5) * T(i - 1) / T(N - 1)) * x[i], Val(N)))
 end
 
-function Λ(α, D)
-    m = zeros(D, D)
-    for i=1:D
-        m[i, i] = α^(1/2 *(i-1)/(D-1))
-    end
-    m
+@inline function f_pen(x::SVector{N, T}) where {N, T}
+    sum(max.(zero(T), abs.(x) .- T(5)) .^ 2)
 end
 
-C(i, D, n) = 10^(2*(i-1)/(D-1))#conditioning
-
-f_pen(x) =  sum(max(0, abs(xi)-5)^2 for xi in x)
-
-const one_pm = sign.(randn(maximum_dimension))
-
-#rotation matrices (probably a bit wrong)
-@memoize function Q(D)
-    r = randn(D); r = r/norm(r)
-    Q = [r nullspace(Matrix(r'))]
+@inline function ellip_weights(::Val{N}, ::Type{T}, exponent::T) where {N, T}
+    SVector{N, T}(ntuple(i -> T(10)^(exponent * T(i - 1) / T(N - 1)), Val(N)))
 end
-@memoize function R(D)
-    r = randn(D); r = r/norm(r)
-    R = [r nullspace(Matrix(r'))]
-end
-
-∑(x) = sum(x)
 
 ## BBOBFunction
 
-struct BBOBFunction{F<:Function}
+struct BBOBFunction{F, N, M}
     name::String
     f::F
-    x_opt::Array{Float64, 1}
-    f_opt::Float64
+    x_opt::SVector{N, Float32}
+    f_opt::Float32
+    Q::SMatrix{N, N, Float32, M}
+    R::SMatrix{N, N, Float32, M}
 end
 
-(f::BBOBFunction)(x) = f.f(x)
-show(io::IO, f::BBOBFunction) =  print(io, f.name)
+function (func::BBOBFunction{F, N, M})(x) where {F, N, M}
+    x_static = SVector{N, Float32}(x)
+    Float64(func.f(x_static, func.x_opt, func.f_opt, func.Q, func.R))
+end
+
+Base.show(io::IO, f::BBOBFunction) = print(io, f.name)
 Base.broadcastable(f::BBOBFunction) = Ref(f)
-
 minimum(f::BBOBFunction) = f.f_opt
-minimizer(f::BBOBFunction, D) = f.x_opt[1:D]
+minimizer(f::BBOBFunction) = f.x_opt
 
-test_x_opt(f::BBOBFunction) = @assert f(f.x_opt) ≈ f.f_opt
-
-## helpers to define function
-
-const BBOBFunctions = BBOBFunction[]
-list_functions() = BBOBFunctions
-
-fun_symbols(n) = (map(Symbol, ["F$(n)", "f$(n)", "x$(n)_opt", "f$(n)_opt"])..., )
-
-macro BBOBFunction(name, simple_name, n)
-    F, f, x_opt, f_opt = fun_symbols(n)
-    fname = Symbol(simple_name)
-    
-    esc(quote
-        $fname = BBOBFunction($name, $f, $x_opt, $f_opt)
-        push!(BBOBFunctions, $fname)
-    end)
+function make_rotation(::Val{N}, seed::Int) where N
+    rng = MersenneTwister(seed)
+    A = randn(rng, Float32, N, N)
+    SMatrix{N, N, Float32}(Matrix(qr(A).Q))
 end
 
-
-"""
-    Define x1_opt and f1_opt.
-
-"""
-const BBOB_range_start = -5
-const BBOB_range_end = 5
-macro define_x_and_f_opt(n)
-    F, f, x_opt, f_opt = fun_symbols(n)
-    esc(quote
-        const $x_opt = rand(Uniform(BBOB_range_start, BBOB_range_end), maximum_dimension)
-        const $f_opt = min(1000, max(-1000, round(rand(Cauchy(0, 100)), digits=2)))
-    end)
+function make_x_opt(::Val{N}, seed::Int) where N
+    rng = MersenneTwister(seed)
+    SVector{N, Float32}(rand(rng, Float32, N) .* 10f0 .- 5f0)
 end
 
-## Functions
+function make_x_opt_linear_slope(::Val{N}, seed::Int) where N
+    rng = MersenneTwister(seed)
+    SVector{N, Float32}(ntuple(i -> rand(rng) < 0.5f0 ? -5f0 : 5f0, Val(N)))
+end
+
+function make_x_opt_schwefel(::Val{N}, seed::Int) where N
+    rng = MersenneTwister(seed)
+    val = Float32(4.2096874633 / 2)
+    SVector{N, Float32}(ntuple(i -> rand(rng) < 0.5f0 ? -val : val, Val(N)))
+end
+
+function make_f_opt(seed::Int)
+    rng = MersenneTwister(seed)
+    Float32(clamp(round(randn(rng) * 100, digits = 2), -1000, 1000))
+end
 
 ## f1, Sphere Function
 
-@define_x_and_f_opt(1)
-
 """ Sphere Function """
-f1(x) = ∑( (x[i] - x1_opt[i])^2 for i=1:length(x) ) + f1_opt
-
-@BBOBFunction("Sphere", "sphere", 1)
+@inline function f1(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = x .- x_opt
+    sum(z .^ 2) + f_opt
+end
 
 ## f2, Ellipsoidal Function
 
-@define_x_and_f_opt(2)
-
 """ Ellipsoidal Function """
-function f2(x) 
-    D = length(x)
-    z = T_osz(x .- x2_opt[1:D])
-    ∑( 10^(6*(i-1)/(D-1)) * z[i]^2 for i=1:length(x) ) + f2_opt
+@inline function f2(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = T_osz(x .- x_opt)
+    w = ellip_weights(Val(N), T, T(6))
+    sum(w .* z .^ 2) + f_opt
 end
-
-@BBOBFunction("Ellipsoidal", "ellipsoidal", 2)
 
 ## f3, Rastrigin Function
 
-@define_x_and_f_opt(3)
-
 """ Rastrigin Function """
-function f3(x) 
-    D = length(x)
-    z = Λ(10, D) * T_asy(T_osz(x .- x3_opt[1:D]), 0.2)
-    10*(D - ∑( cos(2π*z[i]) for i=1:D )) + norm(z)^2 + f3_opt
+@inline function f3(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = Λ_mul(Val(N), T(10), T_asy(T_osz(x .- x_opt), T(0.2)))
+    T(10) * (T(N) - sum(cos.(T(2π) .* z))) + sum(z .^ 2) + f_opt
 end
-
-@BBOBFunction("Rastrigin", "rastrigin", 3)
 
 ## f4, Buche-Rastrigin Function
 
-@define_x_and_f_opt(4)
-
 """ Buche-Rastrigin Function """
-function f4(x) 
-    D = length(x)
-    z = T_osz(x .- x4_opt[1:D])
-    s = [isodd(i) ? 10*10^(0.5*(i-1)/(D-1)) : 10^(0.5*(i-1)/(D-1)) for i=1:D] 
-
-    for i=1:D 
-        @inbounds z[i] = s[i]*z[i] 
-    end
-
-    10*(D - ∑( cos(2π*z[i]) for i=1:D )) + norm(z)^2 + 100*f_pen(x) + f4_opt
+@inline function f4(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = T_osz(x .- x_opt)
+    s = SVector{N, T}(ntuple(i -> isodd(i) ? T(10) * T(10)^(T(0.5) * T(i - 1) / T(N - 1)) :
+                                              T(10)^(T(0.5) * T(i - 1) / T(N - 1)), Val(N)))
+    z = s .* z
+    T(10) * (T(N) - sum(cos.(T(2π) .* z))) + sum(z .^ 2) + T(100) * f_pen(x) + f_opt
 end
-
-@BBOBFunction("Buche-Rastrigin", "buche_rastrigin", 4)
 
 ## f5, Linear Slope
 
-const x5_opt = 5*one_pm
-const f5_opt = min(1000, max(-1000, round(rand(Cauchy(0, 100)), digits=2)))
-
 """ Linear Slope """
-function f5(x) 
-    D = length(x)
-    z = [ x5_opt[i]*x[i] < 25 ? x[i] : x5_opt[i] for i=1:D ]
-    s = [sign(x5_opt[i])*10^((i-1)/(D-1))  for i=1:D] 
-
-    ∑( 5*abs(s[i]) -s[i]*z[i] for i=1:D ) + f5_opt
+@inline function f5(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    s = SVector{N, T}(ntuple(i -> sign(x_opt[i]) * T(10)^(T(i - 1) / T(N - 1)), Val(N)))
+    z = SVector{N, T}(ntuple(i -> x_opt[i] * x[i] < T(25) ? x[i] : x_opt[i], Val(N)))
+    sum(T(5) .* abs.(s) .- s .* z) + f_opt
 end
-
-@BBOBFunction("Linear Slope", "linear_slope", 5)
 
 ## f6, Attractive Sector Function
 
-@define_x_and_f_opt(6)
-
 """ Attractive Sector Function """
-function f6(x) 
-    D = length(x)
-    
-    z = Q(D)*Λ(10, D)*R(D)*(x .- x6_opt[1:D])
-    
-    @inbounds for i=1:D 
-        z[i] = x6_opt[i]*z[i] > 0 ? 100*z[i] : z[i]
-    end
-    
-    T_osz( ∑( z[i]^2 for i=1:D ))^0.9 + f6_opt
+@inline function f6(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = Q * Λ_mul(Val(N), T(10), R * (x .- x_opt))
+    z = SVector{N, T}(ntuple(i -> x_opt[i] * z[i] > zero(T) ? T(100) * z[i] : z[i], Val(N)))
+    T_osz(sum(z .^ 2))^T(0.9) + f_opt
 end
-
-@BBOBFunction("Attractive Sector", "attractive_sector", 6)
-
 
 ## f7, Step Ellipsoidal Function
 
-@define_x_and_f_opt(7)
-
 """ Step Ellipsoidal Function """
-function f7(x) 
-    D = length(x)
-    
-    z = Λ(10, D)*R(D)*(x .- x7_opt[1:D])
-    zhat_1 = copy(z[1])
-    
-    @inbounds for i=1:D 
-        z[i] = z[i] > 0.5 ? floor(0.5 + z[i]) : floor(0.5 + 10*z[i])/10
-    end
-    z = Q(D)*z
-     
-    0.1*max(abs(zhat_1)/(10^4), ∑( 10^(2*(i-1)/(D-1)) * z[i]^2 for i=1:D ) ) + f_pen(x) + f7_opt
+@inline function f7(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = Λ_mul(Val(N), T(10), R * (x .- x_opt))
+    zhat_1 = z[1]
+    z = SVector{N, T}(ntuple(i -> z[i] > T(0.5) ?
+        floor(T(0.5) + z[i]) :
+        floor(T(0.5) + T(10) * z[i]) / T(10), Val(N)))
+    z = Q * z
+    w = ellip_weights(Val(N), T, T(2))
+    T(0.1) * max(abs(zhat_1) / T(1e4), sum(w .* z .^ 2)) + f_pen(x) + f_opt
 end
-
-@BBOBFunction("Step Ellipsoidal Function", "step_ellipsoidal", 7)
 
 ## f8, Rosenbrock Function, original
 
-@define_x_and_f_opt(8)
-
 """ Rosenbrock Function, original """
-function f8(x) 
-    D = length(x)
-    
-    z = max(1, √D/8)*(x .- x8_opt[1:D]) .+ 1
-    
-    ∑( 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1 ) + f8_opt
+@inline function f8(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = max(one(T), T(sqrt(N)) / T(8)) .* (x .- x_opt) .+ one(T)
+    v = SVector{N - 1, T}(ntuple(i -> T(100) * (z[i]^2 - z[i + 1])^2 + (z[i] - one(T))^2, Val(N - 1)))
+    sum(v) + f_opt
 end
-
-@BBOBFunction("Rosenbrock Function, original", "rosenbrock_original", 8)
 
 ## f9, Rosenbrock Function, rotated
 
-@define_x_and_f_opt(9)
-
 """ Rosenbrock Function, rotated """
-function f9(x) 
-    D = length(x)
-    
-    z = max(1, √D/8)*R(D)*(x .- x9_opt[1:D]) .+ 1
-    
-    ∑( 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1 ) + f9_opt
+@inline function f9(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = max(one(T), T(sqrt(N)) / T(8)) .* (R * (x .- x_opt)) .+ one(T)
+    v = SVector{N - 1, T}(ntuple(i -> T(100) * (z[i]^2 - z[i + 1])^2 + (z[i] - one(T))^2, Val(N - 1)))
+    sum(v) + f_opt
 end
-
-@BBOBFunction("Rosenbrock Function, rotated", "rosenbrock_rotated", 9)
 
 ## f10, Ellipsoidal Function
 
-@define_x_and_f_opt(10)
-
 """ Ellipsoidal Function """
-function f10(x) 
-    D = length(x)
-    
-    z = T_osz( R(D)*(x .- x10_opt[1:D])) 
-    
-    ∑( C(i, D, 6)*z[i]^2 for i=1:D ) + f10_opt
+@inline function f10(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = T_osz(R * (x .- x_opt))
+    w = ellip_weights(Val(N), T, T(2))
+    sum(w .* z .^ 2) + f_opt
 end
-
-@BBOBFunction("Ellipsoidal Function", "ellipsoidal_second", 10)
 
 ## f11, Discus Function
 
-@define_x_and_f_opt(11)
-
 """ Discus Function """
-function f11(x) 
-    D = length(x)
-    
-    z = T_osz( R(D)*(x .- x11_opt[1:D])) 
-    
-    10^6*z[1]^2 + ∑( z[i]^2 for i=2:D ) + f11_opt
+@inline function f11(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = T_osz(R * (x .- x_opt))
+    T(1e6) * z[1]^2 + sum(z .^ 2) - z[1]^2 + f_opt
 end
-
-@BBOBFunction("Discus Function", "discus", 11)
-
 
 ## f12, Bent Cigar Function
 
-@define_x_and_f_opt(12)
-
 """ Bent Cigar Function """
-function f12(x) 
-    D = length(x)
-    
-    z = R(D)*T_asy( R(D)*(x .- x12_opt[1:D]), 0.5) 
-    
-    z[1]^2 + 10^6*∑( z[i]^2 for i=2:D ) + f12_opt
+@inline function f12(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = R * T_asy(R * (x .- x_opt), T(0.5))
+    z[1]^2 + T(1e6) * (sum(z .^ 2) - z[1]^2) + f_opt
 end
-
-@BBOBFunction("Bent Cigar Function", "bent_cigar", 12)
 
 ## f13, Sharp Ridge Function
 
-@define_x_and_f_opt(13)
-
 """ Sharp Ridge Function """
-function f13(x)
-    D = length(x)
-    
-    z = Q(D)*Λ(10, D)*R(D)*(x .- x13_opt[1:D])
-    
-    z[1]^2 + 100*√(∑(z[i]^2 for i=2:D )) + f13_opt
+@inline function f13(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = Q * Λ_mul(Val(N), T(10), R * (x .- x_opt))
+    z[1]^2 + T(100) * _safe_sqrt(sum(z .^ 2) - z[1]^2) + f_opt
 end
-
-@BBOBFunction("Sharp Ridge Function", "sharp_ridge", 13)
 
 ## f14, Different Powers Function
 
-@define_x_and_f_opt(14)
-
 """ Different Powers Function """
-function f14(x)
-    D = length(x)
-    
-    z = R(D)*(x .- x14_opt[1:D])
-    
-    √(∑(abs(z[i])^(2+4(i-1)/(D-1)) for i=1:D )) + f14_opt
+@inline function f14(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = R * (x .- x_opt)
+    pw = SVector{N, T}(ntuple(i -> abs(z[i])^(T(2) + T(4) * T(i - 1) / T(N - 1)), Val(N)))
+    _safe_sqrt(sum(pw)) + f_opt
 end
-
-@BBOBFunction("Different Powers Function", "different_powers", 14)
 
 ## f15, Rastrigin Function
 
-@define_x_and_f_opt(15)
-
 """ Rastrigin Function """
-function f15(x)
-    D = length(x)
-
-    z = R(D)*Λ(10, D)*Q(D)*T_asy(T_osz( R(D)*(x .- x15_opt[1:D]) ), 0.2)
-    10*(D - ∑( cos(2π*z[i]) for i=1:D )) + norm(z)^2 + f15_opt
+@inline function f15(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = R * Λ_mul(Val(N), T(10), Q * T_asy(T_osz(R * (x .- x_opt)), T(0.2)))
+    T(10) * (T(N) - sum(cos.(T(2π) .* z))) + sum(z .^ 2) + f_opt
 end
-
-@BBOBFunction("Rastrigin Function", "rastrigin2", 15)
 
 ## f16, Weierstrass Function
 
-@define_x_and_f_opt(16)
-
-const f0 = ∑( 1/2^k * cos(2π*3^k*1/2) for k=0:11 )
-
 """ Weierstrass Function """
-function f16(x)
-    D = length(x)
-
-    z = R(D)*Λ(1/100, D)*Q(D)*T_osz( R(D)*(x .- x16_opt[1:D]) )
-    s = ∑( ∑( 1/2^k * cos(2π*3^k*(z[i]+1/2)) for k=0:11 ) for i=1:D )
-    10*( 1/D*s - f0 )^3 + 10/D*f_pen(x) + f16_opt
+@inline function f16(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = R * Λ_mul(Val(N), T(1 / 100), Q * T_osz(R * (x .- x_opt)))
+    f0 = zero(T)
+    for k in 0:11
+        f0 += T(1) / T(2)^k * cos(T(2π) * T(3)^k * T(0.5))
+    end
+    s = zero(T)
+    for j in 1:N
+        for k in 0:11
+            s += T(1) / T(2)^k * cos(T(2π) * T(3)^k * (z[j] + T(0.5)))
+        end
+    end
+    T(10) * (T(1) / T(N) * s - f0)^3 + T(10) / T(N) * f_pen(x) + f_opt
 end
-
-@BBOBFunction("Weierstrass Function", "weierstrass", 16)
 
 ## f17, Schaffers F7 Function
 
-@define_x_and_f_opt(17)
-
-""" Schaffers F7 Function"""
-function f17(x)
-    D = length(x)
-
-    z = Λ(10, D)*Q(D)*T_asy( R(D)*(x .- x17_opt[1:D]), 0.5)
-    s = [√(z[i]^2 + z[i+1]^2) for i=1:D-1]
-    
-    (1/(D-1)*∑( √s[i]*(1 + sin(50*s[i]^1/5 )^2 ) for i=1:D-1 ))^2 + 10*f_pen(x) + f17_opt
+""" Schaffers F7 Function """
+@inline function f17(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = Λ_mul(Val(N), T(10), Q * T_asy(R * (x .- x_opt), T(0.5)))
+    s = SVector{N - 1, T}(ntuple(i -> _safe_sqrt(z[i]^2 + z[i + 1]^2), Val(N - 1)))
+    v = SVector{N - 1, T}(ntuple(i -> _safe_sqrt(s[i]) * (T(1) + sin(T(50) * s[i]^T(0.2))^2), Val(N - 1)))
+    (T(1) / T(N - 1) * sum(v))^2 + T(10) * f_pen(x) + f_opt
 end
-
-@BBOBFunction("Schaffers F7 Function", "schaffers_F7", 17)
 
 ## f18, Schaffers F7 Function, moderately ill-conditioned
 
-@define_x_and_f_opt(18)
-
 """ Schaffers F7 Function, moderately ill-conditioned """
-function f18(x)
-    D = length(x)
-
-    z = Λ(1000, D)*Q(D)*T_asy( R(D)*(x .- x18_opt[1:D]), 0.5)
-    s = [√(z[i]^2 + z[i+1]^2) for i=1:D-1]
-    
-    (1/(D-1)*∑( √s[i]*(1 + sin(50*s[i]^1/5 )^2 ) for i=1:D-1 ))^2 + 10*f_pen(x) + f18_opt
+@inline function f18(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = Λ_mul(Val(N), T(1000), Q * T_asy(R * (x .- x_opt), T(0.5)))
+    s = SVector{N - 1, T}(ntuple(i -> _safe_sqrt(z[i]^2 + z[i + 1]^2), Val(N - 1)))
+    v = SVector{N - 1, T}(ntuple(i -> _safe_sqrt(s[i]) * (T(1) + sin(T(50) * s[i]^T(0.2))^2), Val(N - 1)))
+    (T(1) / T(N - 1) * sum(v))^2 + T(10) * f_pen(x) + f_opt
 end
-
-@BBOBFunction("Schaffers F7 Function, moderately ill-conditioned", "schaffers_F7_ill_conditioned", 18)
-    
 
 ## f19, Composite Griewank-Rosenbrock Function F8F2
 
-@define_x_and_f_opt(19)
-
 """ Composite Griewank-Rosenbrock Function F8F2 """
-function f19(x)
-    D = length(x)
-
-    z = max(1, √D/8)*R(D)*(x .- x19_opt[1:D]) .+ 1
-    s = [ 100*(z[i]^2 - z[i+1])^2 + (z[i]-1)^2 for i=1:D-1]
-    
-    10/(D-1)*∑( s[i]/4000 -cos(s[i]) for i=1:D-1 ) + 10 + f19_opt
+@inline function f19(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    z = max(one(T), T(sqrt(N)) / T(8)) .* (R * (x .- x_opt)) .+ one(T)
+    s = SVector{N - 1, T}(ntuple(i -> T(100) * (z[i]^2 - z[i + 1])^2 + (z[i] - one(T))^2, Val(N - 1)))
+    v = SVector{N - 1, T}(ntuple(i -> s[i] / T(4000) - cos(s[i]), Val(N - 1)))
+    T(10) / T(N - 1) * sum(v) + T(10) + f_opt
 end
-
-@BBOBFunction("Composite Griewank-Rosenbrock Function F8F2", "composite_griewank_rosenbrock", 19)
-
 
 ## f20, Schwefel Function
-# https://github.com/numbbo/coco/issues/837
-
-const x20_opt = 4.2096874633/2 * one_pm
-const f20_opt = min(1000, max(-1000, round(rand(Cauchy(0, 100)), digits=2)))
 
 """ Schwefel Function """
-function f20(x)
-    D = length(x)
+@inline function f20(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
+    one_pm = sign.(x_opt)
+    x_scaled = T(2) .* one_pm .* x
 
-    x = 2*one_pm[1:D] .* x
-    
-    z = [i==1 ? x[1] : x[i] + 0.25*(x[i-1] .- 2*abs(x20_opt[i-1]) ) for i=1:D]
-    z = 100*( Λ(10, D)*(z- 2*abs.(x20_opt[1:D]) ) + 2*abs.(x20_opt[1:D]) )
-    
-    -1/(100*D)*∑( z[i]*sin(√(abs(z[i]))) for i=1:D ) + 4.189828872724339 + 100*f_pen(z/100) + f20_opt
+    abs_x_opt = abs.(x_opt)
+
+    z = SVector{N, T}(ntuple(Val(N)) do i
+        i == 1 ? x_scaled[1] : x_scaled[i] + T(0.25) * (x_scaled[i - 1] - T(2) * abs_x_opt[i - 1])
+    end)
+
+    z_shifted = z .- T(2) .* abs_x_opt
+    z = T(100) .* (Λ_mul(Val(N), T(10), z_shifted) .+ T(2) .* abs_x_opt)
+
+    v = SVector{N, T}(ntuple(i -> z[i] * sin(_safe_sqrt(abs(z[i]))), Val(N)))
+    -T(1) / (T(100) * T(N)) * sum(v) + T(4.189828872724339) + T(100) * f_pen(z ./ T(100)) + f_opt
 end
 
-@BBOBFunction("Schwefel Function", "schwefel_function",  20)
+const BBOB_FUNCTIONS = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,
+                        f11, f12, f13, f14, f15, f16, f17, f18, f19, f20]
 
-## Compile time tests
+const BBOB_NAMES = [
+    "F1  Sphere", "F2  Ellipsoidal", "F3  Rastrigin", "F4  Buche-Rastrigin",
+    "F5  Linear Slope", "F6  Attractive Sector", "F7  Step Ellipsoidal",
+    "F8  Rosenbrock", "F9  Rosenbrock Rotated", "F10 Ellipsoidal 2",
+    "F11 Discus", "F12 Bent Cigar", "F13 Sharp Ridge", "F14 Different Powers",
+    "F15 Rastrigin 2", "F16 Weierstrass", "F17 Schaffers F7",
+    "F18 Schaffers F7 Ill-Cond", "F19 Griewank-Rosenbrock", "F20 Schwefel"]
 
-map(test_x_opt, BBOBFunctions)
+"""
+    bbob_suite(Val(N); seed=42) -> Vector{BBOBFunction}
+
+Build the full 20-function BBOB suite for dimension `N`.
+Each function gets deterministic random rotations and optima from `seed`.
+"""
+function bbob_suite(::Val{N}; seed = 42) where N
+    suite = BBOBFunction[]
+    for (i, fn) in enumerate(BBOB_FUNCTIONS)
+        if fn === f5
+            x_opt = make_x_opt_linear_slope(Val(N), seed + i)
+        elseif fn === f20
+            x_opt = make_x_opt_schwefel(Val(N), seed + i)
+        else
+            x_opt = make_x_opt(Val(N), seed + i)
+        end
+        f_opt = make_f_opt(seed + 100 + i)
+        Qmat = make_rotation(Val(N), seed + 200 + i)
+        Rmat = make_rotation(Val(N), seed + 300 + i)
+        push!(suite, BBOBFunction(BBOB_NAMES[i], fn, x_opt, f_opt, Qmat, Rmat))
+    end
+    suite
+end
+
+list_functions() = BBOB_NAMES

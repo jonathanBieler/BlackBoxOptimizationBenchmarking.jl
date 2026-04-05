@@ -7,16 +7,20 @@ using OptimizationBBO, OptimizationOptimJL
 
 ##
 
-map(BBOB.test_x_opt, BBOB.list_functions())
+test_functions = BBOB.bbob_suite(Val(3))
 
-test_functions = BBOB.list_functions()
+@testset "Function optima" begin
+    for f in test_functions
+        @test f(f.x_opt) ≈ f.f_opt atol=1e-5
+    end
+end
 
 b = BBOB.benchmark(
-    NelderMead(), BBOB.sphere, [100, 500, 1000], 
+    NelderMead(), test_functions[1], [100, 500, 1000], 
 )
 
 b = BBOB.benchmark(
-    BenchmarkSetup(NelderMead(); isboxed=false), BBOB.sphere, [100, 500, 1000], 
+    BenchmarkSetup(NelderMead(); isboxed=false), test_functions[1], [100, 500, 1000], 
 )
 
 @test length(b.success_count) == 3
@@ -53,8 +57,7 @@ plot(b)
 
 ##
 
-plot(test_functions[1])
-
-
+plot_functions = BBOB.bbob_suite(Val(2))
+plot(plot_functions[1])
 
 ##
