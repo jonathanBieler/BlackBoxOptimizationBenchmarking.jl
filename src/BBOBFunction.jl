@@ -1,13 +1,11 @@
-## Constants and Functions
-
 const maximum_dimension = 100
 
 @inline _safe_sqrt(x) = sqrt(max(x, zero(x)))
 
 @inline function T_osz(xi::T) where T <: Number
-    xhat = xi != zero(T) ? log(abs(xi)) : zero(T)
-    c1 = xi > zero(T) ? T(10) : T(5.5)
-    c2 = xi > zero(T) ? T(7.9) : T(3.1)
+    xhat = ifelse(xi != zero(T), log(abs(xi)), zero(T))
+    c1 = ifelse(xi > zero(T), T(10), T(5.5))
+    c2 = ifelse(xi > zero(T), T(7.9), T(3.1))
     sign(xi) * exp(xhat + T(0.049) * (sin(c1 * xhat) + sin(c2 * xhat)))
 end
 
@@ -16,7 +14,7 @@ end
 @inline function T_asy(x::SVector{N, T}, β) where {N, T}
     SVector{N, T}(ntuple(Val(N)) do i
         xi = x[i]
-        xi > zero(T) ? xi^(one(T) + T(β) * T(i - 1) / T(N - 1) * _safe_sqrt(xi)) : xi
+        ifelse(xi > zero(T), xi^(one(T) + T(β) * T(i - 1) / T(N - 1) * _safe_sqrt(xi)), xi)
     end)
 end
 
@@ -110,8 +108,9 @@ end
 """ Buche-Rastrigin Function """
 @inline function f4(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
     z = T_osz(x .- x_opt)
-    s = SVector{N, T}(ntuple(i -> isodd(i) ? T(10) * T(10)^(T(0.5) * T(i - 1) / T(N - 1)) :
-                                              T(10)^(T(0.5) * T(i - 1) / T(N - 1)), Val(N)))
+    base = ellip_weights(Val(N), T, T(0.5))
+    s = ifelse.(SVector{N, T}(ntuple(i -> T(isodd(i)), Val(N))) .> zero(T),
+        T(10) .* base, base)
     z = s .* z
     T(10) * (T(N) - sum(cos.(T(2π) .* z))) + sum(z .^ 2) + T(100) * f_pen(x) + f_opt
 end
@@ -120,8 +119,10 @@ end
 
 """ Linear Slope """
 @inline function f5(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
-    s = SVector{N, T}(ntuple(i -> sign(x_opt[i]) * T(10)^(T(i - 1) / T(N - 1)), Val(N)))
-    z = SVector{N, T}(ntuple(i -> x_opt[i] * x[i] < T(25) ? x[i] : x_opt[i], Val(N)))
+    s_signs = sign.(x_opt)
+    s_base = ellip_weights(Val(N), T, T(1))
+    s = s_signs .* s_base
+    z = ifelse.(x_opt .* x .< T(25), x, x_opt)
     sum(T(5) .* abs.(s) .- s .* z) + f_opt
 end
 
@@ -130,7 +131,7 @@ end
 """ Attractive Sector Function """
 @inline function f6(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
     z = Q * Λ_mul(Val(N), T(10), R * (x .- x_opt))
-    z = SVector{N, T}(ntuple(i -> x_opt[i] * z[i] > zero(T) ? T(100) * z[i] : z[i], Val(N)))
+    z = ifelse.(x_opt .* z .> zero(T), T(100) .* z, z)
     T_osz(sum(z .^ 2))^T(0.9) + f_opt
 end
 
@@ -140,9 +141,9 @@ end
 @inline function f7(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
     z = Λ_mul(Val(N), T(10), R * (x .- x_opt))
     zhat_1 = z[1]
-    z = SVector{N, T}(ntuple(i -> z[i] > T(0.5) ?
-        floor(T(0.5) + z[i]) :
-        floor(T(0.5) + T(10) * z[i]) / T(10), Val(N)))
+    z = ifelse.(z .> T(0.5),
+        floor.(T(0.5) .+ z),
+        floor.(T(0.5) .+ T(10) .* z) ./ T(10))
     z = Q * z
     w = ellip_weights(Val(N), T, T(2))
     T(0.1) * max(abs(zhat_1) / T(1e4), sum(w .* z .^ 2)) + f_pen(x) + f_opt
@@ -270,17 +271,20 @@ end
 @inline function f20(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
     one_pm = sign.(x_opt)
     x_scaled = T(2) .* one_pm .* x
-
     abs_x_opt = abs.(x_opt)
 
-    z = SVector{N, T}(ntuple(Val(N)) do i
-        i == 1 ? x_scaled[1] : x_scaled[i] + T(0.25) * (x_scaled[i - 1] - T(2) * abs_x_opt[i - 1])
-    end)
+    x_prev = SVector{N, T}(ntuple(i -> ifelse(i == 1, zero(T), x_scaled[max(1, i - 1)]), Val(N)))
+    abs_prev = SVector{N, T}(ntuple(i -> ifelse(i == 1, zero(T), abs_x_opt[max(1, i - 1)]), Val(N)))
+    z = ifelse.(
+        SVector{N, T}(ntuple(i -> T(i == 1), Val(N))) .> zero(T),
+        x_scaled,
+        x_scaled .+ T(0.25) .* (x_prev .- T(2) .* abs_prev)
+    )
 
     z_shifted = z .- T(2) .* abs_x_opt
     z = T(100) .* (Λ_mul(Val(N), T(10), z_shifted) .+ T(2) .* abs_x_opt)
 
-    v = SVector{N, T}(ntuple(i -> z[i] * sin(_safe_sqrt(abs(z[i]))), Val(N)))
+    v = z .* sin.(_safe_sqrt.(abs.(z)))
     -T(1) / (T(100) * T(N)) * sum(v) + T(4.189828872724339) + T(100) * f_pen(z ./ T(100)) + f_opt
 end
 
