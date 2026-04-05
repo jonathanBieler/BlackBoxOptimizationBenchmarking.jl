@@ -1,7 +1,5 @@
 ## Constants and Functions
 
-using StaticArrays, LinearAlgebra, Random
-
 const maximum_dimension = 100
 
 @inline _safe_sqrt(x) = sqrt(max(x, zero(x)))
@@ -50,8 +48,8 @@ function (func::BBOBFunction{F, N, M})(x) where {F, N, M}
     Float64(func.f(x_static, func.x_opt, func.f_opt, func.Q, func.R))
 end
 
-Base.show(io::IO, f::BBOBFunction) = print(io, f.name)
-Base.broadcastable(f::BBOBFunction) = Ref(f)
+show(io::IO, f::BBOBFunction) = print(io, f.name)
+broadcastable(f::BBOBFunction) = Ref(f)
 minimum(f::BBOBFunction) = f.f_opt
 minimizer(f::BBOBFunction) = f.x_opt
 
