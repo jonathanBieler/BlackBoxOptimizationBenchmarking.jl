@@ -3,7 +3,7 @@ const maximum_dimension = 100
 @inline _safe_sqrt(x) = sqrt(max(x, zero(x)))
 
 @inline function T_osz(xi::T) where T <: Number
-    xhat = ifelse(xi != zero(T), log(abs(xi)), zero(T))
+    xhat = log(max(abs(xi), T(1e-12)))
     c1 = ifelse(xi > zero(T), T(10), T(5.5))
     c2 = ifelse(xi > zero(T), T(7.9), T(3.1))
     sign(xi) * exp(xhat + T(0.049) * (sin(c1 * xhat) + sin(c2 * xhat)))
@@ -14,7 +14,7 @@ end
 @inline function T_asy(x::SVector{N, T}, β) where {N, T}
     SVector{N, T}(ntuple(Val(N)) do i
         xi = x[i]
-        ifelse(xi > zero(T), xi^(one(T) + T(β) * T(i - 1) / T(N - 1) * _safe_sqrt(xi)), xi)
+        ifelse(xi > zero(T), abs(xi)^(one(T) + T(β) * T(i - 1) / T(N - 1) * _safe_sqrt(xi)), xi)
     end)
 end
 
@@ -33,7 +33,6 @@ end
 ## BBOBFunction
 
 struct BBOBFunction{F, N, M}
-    name::String
     f::F
     x_opt::SVector{N, Float32}
     f_opt::Float32
@@ -41,12 +40,21 @@ struct BBOBFunction{F, N, M}
     R::SMatrix{N, N, Float32, M}
 end
 
+const BBOB_NAME_MAP = IdDict{Any, String}()
+
+name(f::BBOBFunction) = get(BBOB_NAME_MAP, f, "unnamed")
+
 function (func::BBOBFunction{F, N, M})(x) where {F, N, M}
-    x_static = SVector{N, Float32}(x)
-    Float64(func.f(x_static, func.x_opt, func.f_opt, func.Q, func.R))
+    T = promote_type(eltype(x), Float32)
+    x_static = SVector{N, T}(x)
+    x_opt_T = SVector{N, T}(func.x_opt)
+    f_opt_T = T(func.f_opt)
+    Q_T = SMatrix{N, N, T}(func.Q)
+    R_T = SMatrix{N, N, T}(func.R)
+    func.f(x_static, x_opt_T, f_opt_T, Q_T, R_T)
 end
 
-show(io::IO, f::BBOBFunction) = print(io, f.name)
+show(io::IO, f::BBOBFunction) = print(io, name(f))
 broadcastable(f::BBOBFunction) = Ref(f)
 minimum(f::BBOBFunction) = f.f_opt
 minimizer(f::BBOBFunction) = f.x_opt
@@ -109,8 +117,7 @@ end
 @inline function f4(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
     z = T_osz(x .- x_opt)
     base = ellip_weights(Val(N), T, T(0.5))
-    s = ifelse.(SVector{N, T}(ntuple(i -> T(isodd(i)), Val(N))) .> zero(T),
-        T(10) .* base, base)
+    s = SVector{N, T}(ntuple(i -> isodd(i) ? T(10) * base[i] : base[i], Val(N)))
     z = s .* z
     T(10) * (T(N) - sum(cos.(T(2π) .* z))) + sum(z .^ 2) + T(100) * f_pen(x) + f_opt
 end
@@ -273,13 +280,9 @@ end
     x_scaled = T(2) .* one_pm .* x
     abs_x_opt = abs.(x_opt)
 
-    x_prev = SVector{N, T}(ntuple(i -> ifelse(i == 1, zero(T), x_scaled[max(1, i - 1)]), Val(N)))
-    abs_prev = SVector{N, T}(ntuple(i -> ifelse(i == 1, zero(T), abs_x_opt[max(1, i - 1)]), Val(N)))
-    z = ifelse.(
-        SVector{N, T}(ntuple(i -> T(i == 1), Val(N))) .> zero(T),
-        x_scaled,
-        x_scaled .+ T(0.25) .* (x_prev .- T(2) .* abs_prev)
-    )
+    z = SVector{N, T}(ntuple(Val(N)) do i
+        i == 1 ? x_scaled[i] : x_scaled[i] + T(0.25) * (x_scaled[i - 1] - T(2) * abs_x_opt[i - 1])
+    end)
 
     z_shifted = z .- T(2) .* abs_x_opt
     z = T(100) .* (Λ_mul(Val(N), T(10), z_shifted) .+ T(2) .* abs_x_opt)
@@ -318,7 +321,9 @@ function bbob_suite(::Val{N}; seed = 42) where N
         f_opt = make_f_opt(seed + 100 + i)
         Qmat = make_rotation(Val(N), seed + 200 + i)
         Rmat = make_rotation(Val(N), seed + 300 + i)
-        push!(suite, BBOBFunction(BBOB_NAMES[i], fn, x_opt, f_opt, Qmat, Rmat))
+        bf = BBOBFunction(fn, x_opt, f_opt, Qmat, Rmat)
+        BBOB_NAME_MAP[bf] = BBOB_NAMES[i]
+        push!(suite, bf)
     end
     suite
 end
