@@ -1,4 +1,3 @@
-
 @recipe function f(f::BBOBFunction; nlevels = 15, zoom=1)
 
     markersize := 3
@@ -27,7 +26,7 @@
         cmap := :coolwarm
         alpha := 0.25
         aspectratio := 1
-        title := f.name
+        title := name(f)
     
         x, y, z
     end
