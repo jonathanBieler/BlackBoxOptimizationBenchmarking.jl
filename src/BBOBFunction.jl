@@ -59,7 +59,7 @@ end
 
 function make_x_opt(::Val{N}, seed::Int) where N
     rng = MersenneTwister(seed)
-    SVector{N, Float32}(rand(rng, Float32, N) .* 10f0 .- 5f0)
+    SVector{N, Float32}(rand(rng, Float32, N) .* 8f0 .- 4f0)
 end
 
 function make_x_opt_linear_slope(::Val{N}, seed::Int) where N
