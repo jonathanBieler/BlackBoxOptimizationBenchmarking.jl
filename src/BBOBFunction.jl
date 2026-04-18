@@ -117,7 +117,8 @@ end
 @inline function f4(x::SVector{N, T}, x_opt, f_opt, Q, R) where {N, T}
     z = T_osz(x .- x_opt)
     base = ellip_weights(Val(N), T, T(0.5))
-    s = SVector{N, T}(ntuple(i -> isodd(i) ? T(10) * base[i] : base[i], Val(N)))
+    s = ifelse.(SVector{N, T}(ntuple(i -> T(isodd(i)), Val(N))) .> zero(T),
+        T(10) .* base, base)
     z = s .* z
     T(10) * (T(N) - sum(cos.(T(2π) .* z))) + sum(z .^ 2) + T(100) * f_pen(x) + f_opt
 end
@@ -280,9 +281,13 @@ end
     x_scaled = T(2) .* one_pm .* x
     abs_x_opt = abs.(x_opt)
 
-    z = SVector{N, T}(ntuple(Val(N)) do i
-        i == 1 ? x_scaled[i] : x_scaled[i] + T(0.25) * (x_scaled[i - 1] - T(2) * abs_x_opt[i - 1])
-    end)
+    x_prev = SVector{N, T}(ntuple(i -> ifelse(i == 1, zero(T), x_scaled[max(1, i - 1)]), Val(N)))
+    abs_prev = SVector{N, T}(ntuple(i -> ifelse(i == 1, zero(T), abs_x_opt[max(1, i - 1)]), Val(N)))
+    z = ifelse.(
+        SVector{N, T}(ntuple(i -> T(i == 1), Val(N))) .> zero(T),
+        x_scaled,
+        x_scaled .+ T(0.25) .* (x_prev .- T(2) .* abs_prev)
+    )
 
     z_shifted = z .- T(2) .* abs_x_opt
     z = T(100) .* (Λ_mul(Val(N), T(10), z_shifted) .+ T(2) .* abs_x_opt)
