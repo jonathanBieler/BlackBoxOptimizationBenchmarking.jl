@@ -3,7 +3,7 @@ const maximum_dimension = 100
 @inline _safe_sqrt(x) = sqrt(max(x, zero(x)))
 
 @inline function T_osz(xi::T) where T <: Number
-    xhat = ifelse(xi != zero(T), log(abs(xi)), zero(T))
+    xhat = log(max(abs(xi), T(1e-12)))
     c1 = ifelse(xi > zero(T), T(10), T(5.5))
     c2 = ifelse(xi > zero(T), T(7.9), T(3.1))
     sign(xi) * exp(xhat + T(0.049) * (sin(c1 * xhat) + sin(c2 * xhat)))
@@ -14,7 +14,7 @@ end
 @inline function T_asy(x::SVector{N, T}, β) where {N, T}
     SVector{N, T}(ntuple(Val(N)) do i
         xi = x[i]
-        ifelse(xi > zero(T), xi^(one(T) + T(β) * T(i - 1) / T(N - 1) * _safe_sqrt(xi)), xi)
+        ifelse(xi > zero(T), abs(xi)^(one(T) + T(β) * T(i - 1) / T(N - 1) * _safe_sqrt(xi)), xi)
     end)
 end
 
@@ -33,7 +33,6 @@ end
 ## BBOBFunction
 
 struct BBOBFunction{F, N, M}
-    name::String
     f::F
     x_opt::SVector{N, Float32}
     f_opt::Float32
@@ -41,12 +40,21 @@ struct BBOBFunction{F, N, M}
     R::SMatrix{N, N, Float32, M}
 end
 
+const BBOB_NAME_MAP = IdDict{Any, String}()
+
+name(f::BBOBFunction) = get(BBOB_NAME_MAP, f, "unnamed")
+
 function (func::BBOBFunction{F, N, M})(x) where {F, N, M}
-    x_static = SVector{N, Float32}(x)
-    Float64(func.f(x_static, func.x_opt, func.f_opt, func.Q, func.R))
+    T = promote_type(eltype(x), Float32)
+    x_static = SVector{N, T}(x)
+    x_opt_T = SVector{N, T}(func.x_opt)
+    f_opt_T = T(func.f_opt)
+    Q_T = SMatrix{N, N, T}(func.Q)
+    R_T = SMatrix{N, N, T}(func.R)
+    func.f(x_static, x_opt_T, f_opt_T, Q_T, R_T)
 end
 
-show(io::IO, f::BBOBFunction) = print(io, f.name)
+show(io::IO, f::BBOBFunction) = print(io, name(f))
 broadcastable(f::BBOBFunction) = Ref(f)
 minimum(f::BBOBFunction) = f.f_opt
 minimizer(f::BBOBFunction) = f.x_opt
@@ -318,7 +326,9 @@ function bbob_suite(::Val{N}; seed = 42) where N
         f_opt = make_f_opt(seed + 100 + i)
         Qmat = make_rotation(Val(N), seed + 200 + i)
         Rmat = make_rotation(Val(N), seed + 300 + i)
-        push!(suite, BBOBFunction(BBOB_NAMES[i], fn, x_opt, f_opt, Qmat, Rmat))
+        bf = BBOBFunction(fn, x_opt, f_opt, Qmat, Rmat)
+        BBOB_NAME_MAP[bf] = BBOB_NAMES[i]
+        push!(suite, bf)
     end
     suite
 end
