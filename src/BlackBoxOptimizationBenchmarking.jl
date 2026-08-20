@@ -4,8 +4,8 @@ module BlackBoxOptimizationBenchmarking
     using StaticArrays, Random
     using LinearAlgebra, RecipesBase
 
-    import Optim: minimum, minimizer
-    import Base: show
+    import Optim: minimizer
+    import Base: minimum, show
 
     export BBOBFunction, BenchmarkSetup, bbob_suite
     
