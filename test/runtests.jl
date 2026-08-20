@@ -9,6 +9,14 @@ using OptimizationBBO, OptimizationOptimJL
 
 test_functions = BBOB.bbob_suite(Val(3))
 
+@testset "Suite access" begin
+    @test length(test_functions) == 20
+    @test test_functions[3] isa BBOB.BBOBFunction
+    @test length(test_functions[3].x_opt) == 3
+    @test BBOB.bbob_suite(Val(3); seed=123)[3].x_opt ==
+          BBOB.bbob_suite(Val(3); seed=123)[3].x_opt
+end
+
 @testset "Function optima" begin
     for f in test_functions
         @test f(f.x_opt) ≈ f.f_opt atol=1e-5

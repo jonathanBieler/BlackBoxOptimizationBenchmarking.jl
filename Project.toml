@@ -14,7 +14,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 Distributions = "0.2, 0.25"
-Optim = "1, 1.4"
+Optim = "1, 2"
 Optimization = "3,4,5"
 julia = "1.10"
 RecipesBase = "1"

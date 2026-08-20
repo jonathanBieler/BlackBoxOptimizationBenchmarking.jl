@@ -23,10 +23,18 @@ The script to produce these plots is in `scripts/run_benchmark.jl`.
 
 ### Functions
 
-Functions with input dimension N can be generated using `bbob_suite()`:
+Functions with input dimension `N` can be generated using `bbob_suite`. Generate
+the suite once and index it by the BBOB function number:
 
 ```julia
-julia> BlackBoxOptimizationBenchmarking.bbob_suite(Val(2))
+julia> using BlackBoxOptimizationBenchmarking
+
+julia> suite = bbob_suite(Val(2));
+
+julia> suite[1]
+F1  Sphere
+
+julia> suite
 20-element Vector{BBOBFunction}:
  F1  Sphere
  F2  Ellipsoidal
@@ -50,7 +58,29 @@ julia> BlackBoxOptimizationBenchmarking.bbob_suite(Val(2))
  F20 Schwefel
  ```
 
-An indivdual `BBOBFunction` function `f`  has fields `f_opt` its minimal value, and `x_opt` its minimizer, i.e. `f(x_opt) = f_opt`.
+The index is the function number, so `suite[3]` is F3 (Rastrigin), for example.
+An individual `BBOBFunction` `f` has fields `f_opt`, its minimum value, and `x_opt`, its minimizer, i.e. `f(f.x_opt) == f.f_opt`.
+
+#### Migrating from v1
+
+In v1, functions were accessed from a global collection and accepted inputs of different dimensions. In v2, each function contains dimension-specific static vectors and rotation matrices. Create a suite for the required dimension and replace global lookups as follows:
+
+```julia
+# v1
+f = BlackBoxOptimizationBenchmarking.BBOBFunctions[3]
+
+# v2
+suite = BlackBoxOptimizationBenchmarking.bbob_suite(Val(5))
+f = suite[3]
+```
+
+Keep `suite` and reuse it rather than regenerating it for every function call. The optional seed selects a reproducible BBOB instance:
+
+```julia
+suite = bbob_suite(Val(5); seed = 123)
+```
+
+Changing the dimension requires generating another suite. This dimension-specific API is what allows the functions to use static arrays and run on GPUs.
 
 Functions can be plot using :
 
